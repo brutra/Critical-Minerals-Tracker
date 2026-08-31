@@ -15,6 +15,9 @@
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- World Country Boundaries GeoJSON & TopoJSON -->
+    <script src="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
     <style>
         .active-tab {
             border-bottom: 3px solid #2563eb;
@@ -29,68 +32,70 @@
             background-color: #cbd5e1;
             border-radius: 4px;
         }
-        /* Footer Styles */
+        
+        #partnerMap {
+            height: 480px;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            z-index: 1; /* Keep map beneath fixed navbar/toggles */
+            background-color: #f8fafc;
+        }
 
-    #partnerMap {
-  height: 450px;
-  width: 100%;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  z-index: 1; /* Keep map beneath fixed navbar/toggles */
-}
+        .map-section {
+            margin: 30px 0;
+        }
 
-.map-section {
-  margin: 30px 0;
-}
+        /* Dark Mode Adjustments for Map Tiles */
+        body.dark-mode #partnerMap {
+            border-color: #444;
+            background-color: #1e293b;
+            filter: brightness(0.85) contrast(1.1);
+        }
 
-/* Dark Mode Adjustments for Map Tiles */
-body.dark-mode #partnerMap {
-  border-color: #444;
-  filter: brightness(0.8) contrast(1.2); /* Softens map tiles in dark mode */
-}
-.site-footer {
-  margin-top: 40px;
-  padding: 20px;
-  text-align: center;
-  border-top: 1px solid #ccc;
-  font-family: inherit;
-}
+        .site-footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #ccc;
+            font-family: inherit;
+        }
 
-.footer-links a {
-  margin: 0 5px;
-  color: #0066cc;
-  text-decoration: none;
-}
+        .footer-links a {
+            margin: 0 5px;
+            color: #0066cc;
+            text-decoration: none;
+        }
 
-.dark-mode-btn {
-  margin-top: 15px;
-  padding: 8px 16px;
-  cursor: pointer;
-  border-radius: 4px;
-  border: 1px solid #777;
-  background-color: #f0f0f0;
-  color: #333;
-}
+        .dark-mode-btn {
+            margin-top: 15px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #777;
+            background-color: #f0f0f0;
+            color: #333;
+        }
 
-/* Dark Mode Styles */
-body.dark-mode {
-  background-color: #121212;
-  color: #e0e0e0;
-}
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
 
-body.dark-mode a {
-  color: #64b5f6;
-}
+        body.dark-mode a {
+            color: #64b5f6;
+        }
 
-body.dark-mode .site-footer {
-  border-top-color: #444;
-}
+        body.dark-mode .site-footer {
+            border-top-color: #444;
+        }
 
-body.dark-mode .dark-mode-btn {
-  background-color: #333;
-  color: #fff;
-  border-color: #555;
-}
+        body.dark-mode .dark-mode-btn {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
@@ -107,6 +112,7 @@ body.dark-mode .dark-mode-btn {
                         <h1 class="font-bold text-lg leading-tight">Critical Minerals Deal Tracker</h1>
                         <p class="text-xs text-slate-400">Policy & Geopolitical Supply Chain Analytics - Updated ~Weekly on Mondays</p>
                     </div>
+                </div>
             </div>
         </div>
     </header>
@@ -191,11 +197,28 @@ body.dark-mode .dark-mode-btn {
                 </div>
             </div>
         </div>
-        <!-- Map Container -->
-        <div class="map-section">
-          <h2>Partner Countries</h2>
-          <div id="partnerMap"></div>
+
+        <!-- Interactive Map Container -->
+        <div class="map-section bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="font-semibold text-slate-800 text-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-map-location-dot text-blue-600"></i>
+                    <span>Geopolitical Engagement Map</span>
+                </h2>
+                <div class="flex items-center space-x-4 text-xs text-slate-500">
+                    <span class="flex items-center space-x-1">
+                        <span class="w-3 h-3 rounded bg-blue-600 inline-block"></span>
+                        <span>Active Deals / Partners</span>
+                    </span>
+                    <span class="flex items-center space-x-1">
+                        <span class="w-3 h-3 rounded bg-slate-200 inline-block border border-slate-300"></span>
+                        <span>No Tracked Deals</span>
+                    </span>
+                </div>
+            </div>
+            <div id="partnerMap"></div>
         </div>
+
         <!-- Filter Controls -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
             <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
@@ -252,14 +275,14 @@ body.dark-mode .dark-mode-btn {
                 <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <p class="text-xs text-slate-600 leading-relaxed">
-                Publish each tab of your Google Sheet to the web (**File > Share > Publish to web > Select Tab > Comma-separated values (.csv)**), then paste the corresponding URLs below:
+                Publish each tab of your Google Sheet to the web (<strong>File &gt; Share &gt; Publish to web &gt; Select Tab &gt; Comma-separated values (.csv)</strong>), then paste the corresponding URLs below:
             </p>
             <div id="sheetInputs" class="space-y-3 max-h-72 overflow-y-auto custom-scrollbar pr-1">
                 <!-- Input elements generated dynamically per tab -->
             </div>
             <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
                 <button onclick="resetDefaultConfig()" class="px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">Reset Defaults</button>
-                <button onclick="saveConfig()" class="px-4 py-2 rounded-lg text-xs font-medium text-white bg-blue-600 hover:bg-blue-500">Save & Sync All Tabs</button>
+                <button onclick="saveConfig()" class="px-4 py-2 rounded-lg text-xs font-medium text-white bg-blue-600 hover:bg-blue-500">Save &amp; Sync All Tabs</button>
             </div>
         </div>
     </div>
@@ -277,8 +300,8 @@ body.dark-mode .dark-mode-btn {
             
             <div class="space-y-4 text-xs text-slate-600">
                 <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                    <p class="font-semibold text-blue-900 mb-1">How hosting & updating works:</p>
-                    <p class="text-blue-800">Your site code lives in **GitHub**, and **Netlify** hosts the site for free. Data updates are handled by **Google Sheets**—editing rows in Google Sheets automatically updates your live Netlify website upon page refresh!</p>
+                    <p class="font-semibold text-blue-900 mb-1">How hosting &amp; updating works:</p>
+                    <p class="text-blue-800">Your site code lives in <strong>GitHub</strong>, and <strong>Netlify</strong> hosts the site for free. Data updates are handled by <strong>Google Sheets</strong>—editing rows in Google Sheets automatically updates your live Netlify website upon page refresh!</p>
                 </div>
 
                 <div class="space-y-2">
@@ -289,10 +312,10 @@ body.dark-mode .dark-mode-btn {
                 <div class="space-y-2">
                     <h4 class="font-bold text-slate-800 text-sm">2. Deploy on Netlify</h4>
                     <ol class="list-decimal pl-4 space-y-1">
-                        <li>Log in to **Netlify** using your GitHub account.</li>
-                        <li>Click **Add new site > Import an existing project > GitHub**.</li>
+                        <li>Log in to <strong>Netlify</strong> using your GitHub account.</li>
+                        <li>Click <strong>Add new site &gt; Import an existing project &gt; GitHub</strong>.</li>
                         <li>Select your <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">critical-minerals-tracker</code> repo.</li>
-                        <li>Click **Deploy Site**.</li>
+                        <li>Click <strong>Deploy Site</strong>.</li>
                     </ol>
                 </div>
             </div>
@@ -303,7 +326,20 @@ body.dark-mode .dark-mode-btn {
         </div>
     </div>
 
-    <!-- Application Script Engine -->
+    <!-- Footer Section -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p>A Project by <a href="https://travis-brubaker.com/" target="_blank" rel="noopener noreferrer">Travis Brubaker</a></p>
+            <div class="footer-links">
+                <a href="mailto:brubaker.c.travis@gmail.com">Email</a> |  
+                <a href="https://twitter.com/Tra_brubaker" target="_blank" rel="noopener noreferrer">Twitter / X</a> | 
+                <a href="https://linkedin.com/in/trabru" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            </div>
+            <button id="darkModeToggle" class="dark-mode-btn">Toggle Dark Mode</button>
+        </div>
+    </footer>
+
+    <!-- Main Application Script Engine -->
     <script>
         const DEFAULT_CONFIG = [
             {
@@ -321,8 +357,8 @@ body.dark-mode .dark-mode-btn {
                 name: 'Multilateral Deals',
                 csvUrl: '',
                 sampleData: [
-                    { "Forum / Group": "MSP (Minerals Security Partnership)", "Date": "2023-10-10", "Partners": "US, EU, Japan, Korea, Australia, UK, Canada", "Focus Area": "Project Finance & Processing", "Key Deliverable": "MSP Forum launched to engage producer nations.", "Source": "https://state.gov" },
-                    { "Forum / Group": "G7 Alliance", "Date": "2023-04-16", "Partners": "G7 Economies", "Focus Area": "ESG Standards & Recycling", "Key Deliverable": "5-Point Plan for Critical Minerals Security.", "Source": "https://g7.org" }
+                    { "Forum / Group": "MSP (Minerals Security Partnership)", "Date": "2023-10-10", "Partners": "United States, Japan, South Korea, Australia, United Kingdom, Canada, Germany", "Focus Area": "Project Finance & Processing", "Key Deliverable": "MSP Forum launched to engage producer nations.", "Source": "https://state.gov" },
+                    { "Forum / Group": "G7 Alliance", "Date": "2023-04-16", "Partners": "United States, Japan, Germany, United Kingdom, Canada, France, Italy", "Focus Area": "ESG Standards & Recycling", "Key Deliverable": "5-Point Plan for Critical Minerals Security.", "Source": "https://g7.org" }
                 ]
             },
             {
@@ -330,8 +366,9 @@ body.dark-mode .dark-mode-btn {
                 name: 'Financing & DFC Grants',
                 csvUrl: '',
                 sampleData: [
-                    { "Recipient / Project": "TechMet / Lithium & Cobalt", "Country": "Global / Brazil", "Amount": "$50 Million", "Funding Agency": "DFC", "Date": "2023-09-15", "Objective": "Upstream Extraction Expansion" },
-                    { "Recipient / Project": "Graphite Processing", "Country": "Mozambique", "Amount": "$150 Million", "Funding Agency": "DFC / EXIM", "Date": "2023-10-25", "Objective": "Anode Material Processing" }
+                    { "Recipient / Project": "TechMet / Lithium & Cobalt", "Country": "Brazil", "Amount": "$50 Million", "Funding Agency": "DFC", "Date": "2023-09-15", "Objective": "Upstream Extraction Expansion" },
+                    { "Recipient / Project": "Graphite Processing", "Country": "Mozambique", "Amount": "$150 Million", "Funding Agency": "DFC / EXIM", "Date": "2023-10-25", "Objective": "Anode Material Processing" },
+                    { "Recipient / Project": "Nickel Processing Facility", "Country": "Indonesia", "Amount": "$100 Million", "Funding Agency": "DFC", "Date": "2024-01-12", "Objective": "Midstream Refining" }
                 ]
             }
         ];
@@ -342,10 +379,29 @@ body.dark-mode .dark-mode-btn {
         let categoryChartInstance = null;
         let partnerChartInstance = null;
 
+        // Map Engine Variables
+        let mapInstance = null;
+        let geoJsonLayer = null;
+        let worldGeoData = null;
+
+        // Common country name alias lookup table
+        const COUNTRY_NAME_MAP = {
+            "us": "United States of America",
+            "usa": "United States of America",
+            "united states": "United States of America",
+            "uk": "United Kingdom",
+            "united kingdom": "United Kingdom",
+            "south korea": "South Korea",
+            "korea": "South Korea",
+            "drc": "Democratic Republic of the Congo",
+            "congo": "Democratic Republic of the Congo"
+        };
+
         window.addEventListener('DOMContentLoaded', () => {
             loadConfiguration();
             renderTabs();
             renderConfigModalInputs();
+            initMap();
             fetchCurrentTabData();
         });
 
@@ -458,6 +514,7 @@ body.dark-mode .dark-mode-btn {
 
             renderTable(filtered);
             updateStatsAndCharts(filtered);
+            updateMapMarkers(filtered);
         }
 
         function renderTable(data) {
@@ -498,8 +555,14 @@ body.dark-mode .dark-mode-btn {
                 Object.entries(row).forEach(([k, v]) => {
                     const key = k.toLowerCase();
                     if ((key.includes('country') || key.includes('partner')) && v) {
-                        partnerSet.add(v);
-                        partnerCounts[v] = (partnerCounts[v] || 0) + 1;
+                        const splitValues = String(v).split(/[,/]/);
+                        splitValues.forEach(p => {
+                            const trimmed = p.trim();
+                            if (trimmed) {
+                                partnerSet.add(trimmed);
+                                partnerCounts[trimmed] = (partnerCounts[trimmed] || 0) + 1;
+                            }
+                        });
                     }
                     if ((key.includes('goal') || key.includes('agency') || key.includes('focus') || key.includes('objective')) && v) {
                         categoryCounts[v] = (categoryCounts[v] || 0) + 1;
@@ -544,7 +607,130 @@ body.dark-mode .dark-mode-btn {
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
+        }
 
+        // --- Leaflet Interactive Map & Choropleth Logic ---
+        function initMap() {
+            mapInstance = L.map('partnerMap', {
+                minZoom: 1,
+                maxZoom: 6,
+                attributionControl: false
+            }).setView([20, 0], 2);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(mapInstance);
+
+            // Fetch TopoJSON World Polygons
+            fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+                .then(response => response.json())
+                .then(topoData => {
+                    worldGeoData = topojson.feature(topoData, topoData.objects.countries);
+                    if (currentRawData && currentRawData.length > 0) {
+                        applyFilters();
+                    }
+                });
+        }
+
+        function updateMapMarkers(data) {
+            if (!mapInstance || !worldGeoData) return;
+
+            if (geoJsonLayer) {
+                mapInstance.removeLayer(geoJsonLayer);
+            }
+
+            // Extract country counts from sheet data
+            const partnerCounts = {};
+            data.forEach(row => {
+                Object.entries(row).forEach(([key, val]) => {
+                    const k = key.toLowerCase();
+                    if ((k.includes('country') || k.includes('partner') || k.includes('partners')) && val) {
+                        const countries = String(val).split(/[,/]/);
+                        countries.forEach(c => {
+                            const cleanName = c.trim();
+                            if (cleanName) {
+                                partnerCounts[cleanName] = (partnerCounts[cleanName] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+            });
+
+            const isCountryActive = (geoName) => {
+                const gNameLower = geoName.toLowerCase();
+                return Object.keys(partnerCounts).find(sheetCountry => {
+                    const mappedName = COUNTRY_NAME_MAP[sheetCountry.toLowerCase()] || sheetCountry;
+                    return mappedName.toLowerCase() === gNameLower;
+                });
+            };
+
+            // Render country shapes with fill colors
+            geoJsonLayer = L.geoJson(worldGeoData, {
+                style: function(feature) {
+                    const countryName = feature.properties.name;
+                    const matchedKey = isCountryActive(countryName);
+                    const count = matchedKey ? partnerCounts[matchedKey] : 0;
+
+                    if (count > 0) {
+                        return {
+                            fillColor: '#2563eb', // Blue fill for active countries
+                            weight: 1,
+                            opacity: 1,
+                            color: '#ffffff',
+                            fillOpacity: 0.75
+                        };
+                    } else {
+                        return {
+                            fillColor: '#e2e8f0', // Neutral light slate gray
+                            weight: 0.5,
+                            opacity: 1,
+                            color: '#cbd5e1',
+                            fillOpacity: 0.4
+                        };
+                    }
+                },
+                onEachFeature: function(feature, layer) {
+                    const countryName = feature.properties.name;
+                    const matchedKey = isCountryActive(countryName);
+                    const count = matchedKey ? partnerCounts[matchedKey] : 0;
+
+                    layer.on({
+                        mouseover: function(e) {
+                            const l = e.target;
+                            l.setStyle({
+                                weight: 2,
+                                color: '#1e40af',
+                                fillOpacity: 0.9
+                            });
+                            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                                l.bringToFront();
+                            }
+                        },
+                        mouseout: function(e) {
+                            geoJsonLayer.resetStyle(e.target);
+                        }
+                    });
+
+                    if (count > 0) {
+                        layer.bindPopup(`
+                            <div class="text-xs font-sans">
+                                <strong class="text-sm font-bold text-slate-900">${countryName}</strong><br/>
+                                <span class="text-blue-600 font-semibold">${count} Tracked Deal(s) / Initiative(s)</span>
+                            </div>
+                        `);
+                    } else {
+                        layer.bindPopup(`
+                            <div class="text-xs font-sans text-slate-500">
+                                <strong>${countryName}</strong><br/>No active deals recorded in current view.
+                            </div>
+                        `);
+                    }
+                }
+            }).addTo(mapInstance);
+        }
+
+        // --- Modal & Dark Mode Control Functions ---
         function renderConfigModalInputs() {
             const container = document.getElementById('sheetInputs');
             container.innerHTML = tabsConfig.map((tab) => `
@@ -586,65 +772,20 @@ body.dark-mode .dark-mode-btn {
             fetchCurrentTabData();
             toggleConfigModal();
         }
+
+        // Dark Mode Controller
+        const toggleBtn = document.getElementById('darkModeToggle');
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+        toggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        });
     </script>
-<!-- Footer Section -->
-<footer class="site-footer">
-  <div class="footer-content">
-    <p>A Project by <a href="https://travis-brubaker.com/" target="_blank" rel="noopener noreferrer">Travis Brubaker</a></p>
-    <div class="footer-links">
-      <a href="mailto:brubaker.c.travis@gmail.com">Email</a> |  
-      <a href="https://twitter.com/Tra_brubaker" target="_blank" rel="noopener noreferrer">Twitter / X</a> | 
-      <a href="https://linkedin.com/in/trabru" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-    </div>
-    <button id="darkModeToggle" class="dark-mode-btn">Toggle Dark Mode</button>
-  </div>
-</footer>
-
-<!-- Dark Mode JavaScript -->
-<script>
-  const toggleBtn = document.getElementById('darkModeToggle');
-  
-  // Check for saved theme preference or default to light
-  if (localStorage.getItem('theme') === 'dark') {
-    document.body.classList.add('dark-mode');
-  }
-
-  toggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    
-    // Save user preference
-    if (document.body.classList.contains('dark-mode')) {
-      localStorage.setItem('theme', 'dark');
-    } else {
-      localStorage.setItem('theme', 'light');
-    }
-  });
-</script>    
 </body>
-    <script>
-  // Initialize the map (centered globally)
-  const map = L.map('partnerMap').setView([20, 0], 2);
-
-  // Add OpenStreetMap tile layer
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  // Define partner country markers [Latitude, Longitude]
-  const partnerCountries = [
-    { name: "United States", coords: [37.0902, -95.7129] },
-    { name: "Japan", coords: [36.2048, 138.2529] },
-    { name: "Australia", coords: [-25.2744, 133.7751] },
-    { name: "Germany", coords: [51.1657, 10.4515] },
-    { name: "Indonesia", coords: [-0.7893, 113.9213] }
-  ];
-
-  // Add markers to the map
-  partnerCountries.forEach(country => {
-    L.marker(country.coords)
-      .addTo(map)
-      .bindPopup(`<b>${country.name}</b>`);
-  });
-</script>
 </html>
