@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Critical Minerals Deal Tracker</title>
+    <title>Critical Minerals Deal Tracker | Geopolitical & Policy Analytics</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter (sans) & Merriweather (serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
     <!-- PapaParse for Google Sheets CSV parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- Chart.js for live analytics -->
@@ -19,14 +23,21 @@
     <script src="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+        }
+        h1, h2, h3, .serif-heading {
+            font-family: 'Merriweather', serif;
+        }
         .active-tab {
-            border-bottom: 3px solid #2563eb;
-            color: #2563eb;
+            border-bottom: 2px solid #9f1239;
+            color: #9f1239;
             font-weight: 600;
         }
         .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
+            height: 5px;
+            width: 5px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background-color: #cbd5e1;
@@ -37,206 +48,190 @@
             height: 480px;
             width: 100%;
             border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            z-index: 1; /* Keep map beneath fixed navbar/toggles */
+            border: 1px solid #e2e8f0;
+            z-index: 1;
             background-color: #f8fafc;
         }
 
         .map-section {
-            margin: 30px 0;
+            margin: 24px 0;
         }
 
-        /* Dark Mode Adjustments for Map Tiles */
+        /* Dark Mode Styling */
+        body.dark-mode {
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        body.dark-mode header,
+        body.dark-mode nav,
+        body.dark-mode .card-bg {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
         body.dark-mode #partnerMap {
-            border-color: #444;
-            background-color: #1e293b;
+            border-color: #334155;
+            background-color: #0f172a;
             filter: brightness(0.85) contrast(1.1);
         }
-
-        .site-footer {
-            margin-top: 40px;
-            padding: 20px;
-            text-align: center;
-            border-top: 1px solid #ccc;
-            font-family: inherit;
-        }
-
-        .footer-links a {
-            margin: 0 5px;
-            color: #0066cc;
-            text-decoration: none;
-        }
-
-        .dark-mode-btn {
-            margin-top: 15px;
-            padding: 8px 16px;
-            cursor: pointer;
-            border-radius: 4px;
-            border: 1px solid #777;
-            background-color: #f0f0f0;
-            color: #333;
-        }
-
-        /* Dark Mode Styles */
-        body.dark-mode {
-            background-color: #121212;
-            color: #e0e0e0;
-        }
-
         body.dark-mode a {
-            color: #64b5f6;
+            color: #f43f5e;
         }
-
-        body.dark-mode .site-footer {
-            border-top-color: #444;
-        }
-
         body.dark-mode .dark-mode-btn {
-            background-color: #333;
+            background-color: #334155;
             color: #fff;
-            border-color: #555;
+            border-color: #475569;
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-50 min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Header Navigation -->
-    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
                 <div class="flex items-center space-x-3">
-                    <div class="bg-blue-600 p-2 rounded-lg text-white">
-                        <i class="fa-solid fa-cubes text-xl"></i>
+                    <div class="w-10 h-10 rounded-full bg-rose-900 text-white flex items-center justify-center font-bold text-lg font-serif">
+                        T
                     </div>
                     <div>
-                        <h1 class="font-bold text-lg leading-tight">Critical Minerals Deal Tracker</h1>
-                        <p class="text-xs text-slate-400">Policy & Geopolitical Supply Chain Analytics - Updated ~Weekly on Mondays</p>
+                        <h1 class="text-xl font-bold text-slate-900 leading-tight">Critical Minerals Deal Tracker</h1>
+                        <p class="text-xs text-slate-500 font-normal">Geopolitical Analysis & Supply Chain Policy</p>
                     </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="https://travis-brubaker.com/" target="_blank" class="text-xs text-slate-600 hover:text-rose-900 font-medium transition">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Main Site
+                    </a>
+                    <button onclick="toggleConfigModal()" class="text-xs border border-slate-300 hover:border-slate-400 text-slate-700 px-3 py-1.5 rounded-md font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-gear text-slate-500"></i>
+                        <span>Settings</span>
+                    </button>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Dynamic Tab Navigation Bar -->
-    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div id="tabContainer" class="flex space-x-8 overflow-x-auto custom-scrollbar text-sm text-slate-600">
+    <nav class="bg-white border-b border-slate-200 sticky top-20 z-40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div id="tabContainer" class="flex space-x-8 overflow-x-auto custom-scrollbar text-xs text-slate-600">
                 <!-- Tabs rendered dynamically -->
             </div>
         </div>
     </nav>
 
     <!-- Main Content Container -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
         <!-- Top Metrics Bar -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="statsGrid">
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Tracked Deals</p>
-                    <p id="statTotalDeals" class="text-2xl font-bold text-slate-900 mt-1">--</p>
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Tracked Deals</p>
+                    <p id="statTotalDeals" class="text-2xl font-bold text-slate-900 mt-1 font-serif">--</p>
                 </div>
-                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                    <i class="fa-solid fa-handshake text-xl"></i>
+                <div class="p-2.5 bg-rose-50 text-rose-900 rounded-md">
+                    <i class="fa-solid fa-handshake text-lg"></i>
                 </div>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Unique Partners</p>
-                    <p id="statPartners" class="text-2xl font-bold text-slate-900 mt-1">--</p>
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Unique Partners</p>
+                    <p id="statPartners" class="text-2xl font-bold text-slate-900 mt-1 font-serif">--</p>
                 </div>
-                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
-                    <i class="fa-solid fa-earth-americas text-xl"></i>
+                <div class="p-2.5 bg-slate-100 text-slate-700 rounded-md">
+                    <i class="fa-solid fa-earth-americas text-lg"></i>
                 </div>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Strategic Goals</p>
-                    <p id="statGoals" class="text-2xl font-bold text-slate-900 mt-1">--</p>
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Strategic Focus Areas</p>
+                    <p id="statGoals" class="text-2xl font-bold text-slate-900 mt-1 font-serif">--</p>
                 </div>
-                <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
-                    <i class="fa-solid fa-bullseye text-xl"></i>
+                <div class="p-2.5 bg-amber-50 text-amber-800 rounded-md">
+                    <i class="fa-solid fa-bullseye text-lg"></i>
                 </div>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Sync Status</p>
-                    <p id="statStatus" class="text-sm font-semibold text-emerald-600 mt-1 flex items-center space-x-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Data Sync Status</p>
+                    <p id="statStatus" class="text-xs font-semibold text-emerald-700 mt-2 flex items-center space-x-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                         <span>Live / Ready</span>
                     </p>
                 </div>
-                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
-                    <i class="fa-solid fa-rotate text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Analytics Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-slate-800 text-sm flex items-center space-x-2">
-                        <i class="fa-solid fa-chart-pie text-blue-500"></i>
-                        <span>Objectives / Agencies Breakdown</span>
-                    </h3>
-                </div>
-                <div class="h-64 relative">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-slate-800 text-sm flex items-center space-x-2">
-                        <i class="fa-solid fa-chart-column text-emerald-500"></i>
-                        <span>Top Partner Economies</span>
-                    </h3>
-                </div>
-                <div class="h-64 relative">
-                    <canvas id="partnerChart"></canvas>
+                <div class="p-2.5 bg-slate-100 text-slate-700 rounded-md">
+                    <i class="fa-solid fa-rotate text-lg"></i>
                 </div>
             </div>
         </div>
 
         <!-- Interactive Map Container -->
-        <div class="map-section bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="font-semibold text-slate-800 text-sm flex items-center space-x-2">
-                    <i class="fa-solid fa-map-location-dot text-blue-600"></i>
+        <div class="map-section card-bg bg-white p-6 rounded-lg border border-slate-200">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-bold text-slate-900 font-serif flex items-center space-x-2">
+                    <i class="fa-solid fa-map-location-dot text-rose-900 text-sm"></i>
                     <span>Geopolitical Engagement Map</span>
                 </h2>
                 <div class="flex items-center space-x-4 text-xs text-slate-500">
-                    <span class="flex items-center space-x-1">
-                        <span class="w-3 h-3 rounded bg-blue-600 inline-block"></span>
+                    <span class="flex items-center space-x-1.5">
+                        <span class="w-3 h-3 rounded bg-rose-900 inline-block"></span>
                         <span>Active Deals / Partners</span>
                     </span>
-                    <span class="flex items-center space-x-1">
+                    <span class="flex items-center space-x-1.5">
                         <span class="w-3 h-3 rounded bg-slate-200 inline-block border border-slate-300"></span>
-                        <span>No Tracked Deals</span>
+                        <span>No Active Deals</span>
                     </span>
                 </div>
             </div>
             <div id="partnerMap"></div>
         </div>
 
+        <!-- Analytics Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card-bg bg-white p-6 rounded-lg border border-slate-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-slate-900 font-serif flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-pie text-rose-900"></i>
+                        <span>Objectives / Agencies Breakdown</span>
+                    </h3>
+                </div>
+                <div class="h-60 relative">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="card-bg bg-white p-6 rounded-lg border border-slate-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-slate-900 font-serif flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-column text-rose-900"></i>
+                        <span>Top Partner Economies</span>
+                    </h3>
+                </div>
+                <div class="h-60 relative">
+                    <canvas id="partnerChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- Filter Controls -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <div class="card-bg bg-white p-4 rounded-lg border border-slate-200 space-y-3">
             <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
                 <div class="relative w-full md:w-80">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search deals, partners, goals..." 
-                           class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                           class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs focus:ring-1 focus:ring-rose-900 focus:outline-none">
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <select id="countryFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <select id="countryFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-md focus:ring-1 focus:ring-rose-900 focus:outline-none">
                         <option value="">All Countries / Partners</option>
                     </select>
-                    <select id="goalFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <select id="goalFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-md focus:ring-1 focus:ring-rose-900 focus:outline-none">
                         <option value="">All Objectives</option>
                     </select>
                     
-                    <button onclick="fetchCurrentTabData()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-xs font-medium border border-blue-200 flex items-center space-x-1.5 transition">
+                    <button onclick="fetchCurrentTabData()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 rounded-md text-xs font-medium border border-slate-200 flex items-center space-x-1.5 transition">
                         <i class="fa-solid fa-arrows-rotate"></i>
                         <span>Refresh Sheet</span>
                     </button>
@@ -245,10 +240,10 @@
         </div>
 
         <!-- Dynamic Data Table -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="card-bg bg-white rounded-lg border border-slate-200 overflow-hidden">
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left border-collapse text-xs">
-                    <thead id="tableHeader" class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+                    <thead id="tableHeader" class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
                         <!-- Columns rendered dynamically based on active sheet -->
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
@@ -258,21 +253,21 @@
             </div>
             <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
                 <span id="rowCount">Showing 0 entries</span>
-                <span id="activeTabName" class="font-medium text-slate-600">Tab: US Bilat Deals</span>
+                <span id="activeTabName" class="font-medium text-slate-700">Tab: US Bilat Deals</span>
             </div>
         </div>
 
     </main>
 
     <!-- Configure Google Sheets Links Modal -->
-    <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
+    <div id="configModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 space-y-4 border border-slate-200">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
-                    <i class="fa-solid fa-table-list text-blue-600"></i>
-                    <span>Connect Google Sheet CSV Links for Each Tab</span>
+                <h3 class="font-bold text-slate-900 text-sm font-serif flex items-center space-x-2">
+                    <i class="fa-solid fa-table-list text-rose-900"></i>
+                    <span>Connect Google Sheet CSV Links</span>
                 </h3>
-                <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-base"></i></button>
             </div>
             <p class="text-xs text-slate-600 leading-relaxed">
                 Publish each tab of your Google Sheet to the web (<strong>File &gt; Share &gt; Publish to web &gt; Select Tab &gt; Comma-separated values (.csv)</strong>), then paste the corresponding URLs below:
@@ -281,61 +276,31 @@
                 <!-- Input elements generated dynamically per tab -->
             </div>
             <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-                <button onclick="resetDefaultConfig()" class="px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">Reset Defaults</button>
-                <button onclick="saveConfig()" class="px-4 py-2 rounded-lg text-xs font-medium text-white bg-blue-600 hover:bg-blue-500">Save &amp; Sync All Tabs</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Deployment Pipeline Modal -->
-    <div id="deployModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
-                    <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i>
-                    <span>GitHub + Netlify Publishing Steps</span>
-                </h3>
-                <button onclick="toggleDeployModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            
-            <div class="space-y-4 text-xs text-slate-600">
-                <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                    <p class="font-semibold text-blue-900 mb-1">How hosting &amp; updating works:</p>
-                    <p class="text-blue-800">Your site code lives in <strong>GitHub</strong>, and <strong>Netlify</strong> hosts the site for free. Data updates are handled by <strong>Google Sheets</strong>—editing rows in Google Sheets automatically updates your live Netlify website upon page refresh!</p>
-                </div>
-
-                <div class="space-y-2">
-                    <h4 class="font-bold text-slate-800 text-sm">1. Push Code to GitHub</h4>
-                    <p>Create a repository named <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">critical-minerals-tracker</code> on GitHub and upload <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">index.html</code>.</p>
-                </div>
-
-                <div class="space-y-2">
-                    <h4 class="font-bold text-slate-800 text-sm">2. Deploy on Netlify</h4>
-                    <ol class="list-decimal pl-4 space-y-1">
-                        <li>Log in to <strong>Netlify</strong> using your GitHub account.</li>
-                        <li>Click <strong>Add new site &gt; Import an existing project &gt; GitHub</strong>.</li>
-                        <li>Select your <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">critical-minerals-tracker</code> repo.</li>
-                        <li>Click <strong>Deploy Site</strong>.</li>
-                    </ol>
-                </div>
-            </div>
-
-            <div class="flex justify-end pt-2 border-t border-slate-100">
-                <button onclick="toggleDeployModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-white bg-slate-800 hover:bg-slate-700">Close</button>
+                <button onclick="resetDefaultConfig()" class="px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">Reset Defaults</button>
+                <button onclick="saveConfig()" class="px-4 py-1.5 rounded-md text-xs font-medium text-white bg-rose-900 hover:bg-rose-950">Save &amp; Sync All Tabs</button>
             </div>
         </div>
     </div>
 
     <!-- Footer Section -->
-    <footer class="site-footer">
-        <div class="footer-content">
-            <p>A Project by <a href="https://travis-brubaker.com/" target="_blank" rel="noopener noreferrer">Travis Brubaker</a></p>
-            <div class="footer-links">
-                <a href="mailto:brubaker.c.travis@gmail.com">Email</a> |  
-                <a href="https://twitter.com/Tra_brubaker" target="_blank" rel="noopener noreferrer">Twitter / X</a> | 
-                <a href="https://linkedin.com/in/trabru" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+    <footer class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 space-y-3">
+            <p class="font-serif text-sm font-semibold text-slate-800">Travis Brubaker</p>
+            <p class="text-slate-500">International Energy &amp; Climate Policy Expert | Geopolitical Analysis</p>
+            <div class="flex justify-center space-x-4 pt-1">
+                <a href="mailto:brubaker.c.travis@gmail.com" class="hover:text-rose-900 transition">Email</a>
+                <span>&bull;</span>
+                <a href="https://twitter.com/Tra_brubaker" target="_blank" class="hover:text-rose-900 transition">Twitter / X</a>
+                <span>&bull;</span>
+                <a href="https://linkedin.com/in/trabru" target="_blank" class="hover:text-rose-900 transition">LinkedIn</a>
+                <span>&bull;</span>
+                <a href="https://travis-brubaker.com/" target="_blank" class="hover:text-rose-900 transition">Personal Website</a>
             </div>
-            <button id="darkModeToggle" class="dark-mode-btn">Toggle Dark Mode</button>
+            <div class="pt-2">
+                <button id="darkModeToggle" class="dark-mode-btn text-xs border border-slate-300 px-3 py-1 rounded-md text-slate-600 hover:bg-slate-50 transition">
+                    Toggle Dark Mode
+                </button>
+            </div>
         </div>
     </footer>
 
@@ -418,7 +383,7 @@
             const container = document.getElementById('tabContainer');
             container.innerHTML = tabsConfig.map(tab => `
                 <button onclick="switchTab('${tab.id}')" 
-                        class="py-4 px-2 whitespace-nowrap text-xs font-medium transition-colors flex items-center space-x-2 ${tab.id === activeTabId ? 'active-tab' : 'border-b-2 border-transparent hover:text-slate-900'}">
+                        class="py-3 px-1 whitespace-nowrap text-xs font-medium transition-colors flex items-center space-x-2 ${tab.id === activeTabId ? 'active-tab' : 'border-b-2 border-transparent hover:text-slate-900'}">
                     <span>${tab.name}</span>
                     ${tab.csvUrl ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Connected to Google Sheet"></span>' : ''}
                 </button>
@@ -437,7 +402,7 @@
             document.getElementById('activeTabName').innerText = `Tab: ${tab.name}`;
             
             if (tab.csvUrl && tab.csvUrl.trim() !== '') {
-                document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span><span>Fetching Sheet...</span>`;
+                document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Fetching Sheet...</span>`;
                 Papa.parse(tab.csvUrl, {
                     download: true,
                     header: true,
@@ -454,7 +419,7 @@
                     }
                 });
             } else {
-                document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500"></span><span>Sample Mode</span>`;
+                document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span>Sample Mode</span>`;
                 currentRawData = tab.sampleData;
                 processAndDisplayData(currentRawData);
             }
@@ -532,11 +497,11 @@
             thead.innerHTML = `<tr>` + headers.map(h => `<th class="px-4 py-3">${h}</th>`).join('') + `</tr>`;
 
             tbody.innerHTML = data.map(row => `
-                <tr class="hover:bg-slate-50/80 transition-colors">
+                <tr class="hover:bg-slate-50 transition-colors">
                     ${headers.map(h => {
                         let cell = row[h] || '--';
                         if (String(cell).startsWith('http')) {
-                            cell = `<a href="${cell}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center space-x-1"><span>Link</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>`;
+                            cell = `<a href="${cell}" target="_blank" class="text-rose-900 font-medium hover:underline inline-flex items-center space-x-1"><span>Link</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>`;
                         }
                         return `<td class="px-4 py-3">${cell}</td>`;
                     }).join('')}
@@ -586,10 +551,10 @@
                     labels: Object.keys(categoryCounts).slice(0, 5),
                     datasets: [{
                         data: Object.values(categoryCounts).slice(0, 5),
-                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+                        backgroundColor: ['#8c1d40', '#0f766e', '#d97706', '#4338ca', '#be185d']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, family: 'Inter' } } } } }
             });
 
             const partnerCtx = document.getElementById('partnerChart').getContext('2d');
@@ -602,10 +567,10 @@
                     datasets: [{
                         label: 'Deals Count',
                         data: Object.values(partnerCounts).slice(0, 6),
-                        backgroundColor: '#10b981'
+                        backgroundColor: '#8c1d40'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } } } }
             });
         }
 
@@ -640,7 +605,6 @@
                 mapInstance.removeLayer(geoJsonLayer);
             }
 
-            // Extract country counts from sheet data
             const partnerCounts = {};
             data.forEach(row => {
                 Object.entries(row).forEach(([key, val]) => {
@@ -665,7 +629,7 @@
                 });
             };
 
-            // Render country shapes with fill colors
+            // Render country shapes matching website palette
             geoJsonLayer = L.geoJson(worldGeoData, {
                 style: function(feature) {
                     const countryName = feature.properties.name;
@@ -674,19 +638,19 @@
 
                     if (count > 0) {
                         return {
-                            fillColor: '#2563eb', // Blue fill for active countries
+                            fillColor: '#8c1d40', // Policy/Academic Crimson Fill
                             weight: 1,
                             opacity: 1,
                             color: '#ffffff',
-                            fillOpacity: 0.75
+                            fillOpacity: 0.8
                         };
                     } else {
                         return {
-                            fillColor: '#e2e8f0', // Neutral light slate gray
+                            fillColor: '#f1f5f9',
                             weight: 0.5,
                             opacity: 1,
                             color: '#cbd5e1',
-                            fillOpacity: 0.4
+                            fillOpacity: 0.5
                         };
                     }
                 },
@@ -700,8 +664,8 @@
                             const l = e.target;
                             l.setStyle({
                                 weight: 2,
-                                color: '#1e40af',
-                                fillOpacity: 0.9
+                                color: '#4c0519',
+                                fillOpacity: 0.95
                             });
                             if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
                                 l.bringToFront();
@@ -715,8 +679,8 @@
                     if (count > 0) {
                         layer.bindPopup(`
                             <div class="text-xs font-sans">
-                                <strong class="text-sm font-bold text-slate-900">${countryName}</strong><br/>
-                                <span class="text-blue-600 font-semibold">${count} Tracked Deal(s) / Initiative(s)</span>
+                                <strong class="text-sm font-bold text-slate-900 font-serif">${countryName}</strong><br/>
+                                <span class="text-rose-900 font-semibold">${count} Tracked Deal(s) / Initiative(s)</span>
                             </div>
                         `);
                     } else {
@@ -730,27 +694,23 @@
             }).addTo(mapInstance);
         }
 
-        // --- Modal & Dark Mode Control Functions ---
+        // --- Modal & Control Functions ---
         function renderConfigModalInputs() {
             const container = document.getElementById('sheetInputs');
             container.innerHTML = tabsConfig.map((tab) => `
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-md space-y-1.5">
                     <div class="flex justify-between items-center">
                         <span class="font-semibold text-xs text-slate-800">${tab.name} Tab</span>
                         <span class="text-[10px] text-slate-400">CSV URL</span>
                     </div>
                     <input type="url" id="csv_input_${tab.id}" value="${tab.csvUrl || ''}" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" 
-                           class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                           class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-700 focus:ring-1 focus:ring-rose-900 focus:outline-none">
                 </div>
             `).join('');
         }
 
         function toggleConfigModal() {
             document.getElementById('configModal').classList.toggle('hidden');
-        }
-
-        function toggleDeployModal() {
-            document.getElementById('deployModal').classList.toggle('hidden');
         }
 
         function saveConfig() {
