@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Critical Minerals Deal Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PapaParse for Google Sheets CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Chart.js for live analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .active-tab {
+            border-bottom: 3px solid #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-600 p-2 rounded-lg text-white">
+                        <i class="fa-solid fa-cubes text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">Critical Minerals Deal Tracker</h1>
+                        <p class="text-xs text-slate-400">Live Policy & Geopolitical Supply Chain Analytics</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleConfigModal()" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium border border-slate-700 transition">
+                        <i class="fa-solid fa-link text-blue-400"></i>
+                        <span>Configure Sheet Links</span>
+                    </button>
+                    <button onclick="toggleDeployModal()" class="flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md text-xs font-medium transition shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>GitHub & Netlify Guide</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dynamic Tab Navigation Bar -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div id="tabContainer" class="flex space-x-8 overflow-x-auto custom-scrollbar text-sm text-slate-600">
+                <!-- Tabs rendered dynamically -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Top Metrics Bar -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="statsGrid">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Tracked Deals</p>
+                    <p id="statTotalDeals" class="text-2xl font-bold text-slate-900 mt-1">--</p>
+                </div>
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                    <i class="fa-solid fa-handshake text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Unique Partners</p>
+                    <p id="statPartners" class="text-2xl font-bold text-slate-900 mt-1">--</p>
+                </div>
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+                    <i class="fa-solid fa-earth-americas text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Strategic Goals</p>
+                    <p id="statGoals" class="text-2xl font-bold text-slate-900 mt-1">--</p>
+                </div>
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
+                    <i class="fa-solid fa-bullseye text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Sync Status</p>
+                    <p id="statStatus" class="text-sm font-semibold text-emerald-600 mt-1 flex items-center space-x-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Live / Ready</span>
+                    </p>
+                </div>
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                    <i class="fa-solid fa-rotate text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-slate-800 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-pie text-blue-500"></i>
+                        <span>Objectives / Agencies Breakdown</span>
+                    </h3>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-slate-800 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-column text-emerald-500"></i>
+                        <span>Top Partner Economies</span>
+                    </h3>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="partnerChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search deals, partners, goals..." 
+                           class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <select id="countryFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">All Countries / Partners</option>
+                    </select>
+                    <select id="goalFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">All Objectives</option>
+                    </select>
+                    <button onclick="exportCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-medium border border-slate-300 flex items-center space-x-1.5 transition">
+                        <i class="fa-solid fa-file-csv text-emerald-600"></i>
+                        <span>Export CSV</span>
+                    </button>
+                    <button onclick="fetchCurrentTabData()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-xs font-medium border border-blue-200 flex items-center space-x-1.5 transition">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>Refresh Sheet</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Data Table -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead id="tableHeader" class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+                        <!-- Columns rendered dynamically based on active sheet -->
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Rows rendered dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                <span id="rowCount">Showing 0 entries</span>
+                <span id="activeTabName" class="font-medium text-slate-600">Tab: US Bilat Deals</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Configure Google Sheets Links Modal -->
+    <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
+                    <i class="fa-solid fa-table-list text-blue-600"></i>
+                    <span>Connect Google Sheet CSV Links for Each Tab</span>
+                </h3>
+                <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Publish each tab of your Google Sheet to the web (**File > Share > Publish to web > Select Tab > Comma-separated values (.csv)**), then paste the corresponding URLs below:
+            </p>
+            <div id="sheetInputs" class="space-y-3 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+                <!-- Input elements generated dynamically per tab -->
+            </div>
+            <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button onclick="resetDefaultConfig()" class="px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">Reset Defaults</button>
+                <button onclick="saveConfig()" class="px-4 py-2 rounded-lg text-xs font-medium text-white bg-blue-600 hover:bg-blue-500">Save & Sync All Tabs</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deployment Pipeline Modal -->
+    <div id="deployModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i>
+                    <span>GitHub + Netlify Publishing Steps</span>
+                </h3>
+                <button onclick="toggleDeployModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-4 text-xs text-slate-600">
+                <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                    <p class="font-semibold text-blue-900 mb-1">How hosting & updating works:</p>
+                    <p class="text-blue-800">Your site code lives in **GitHub**, and **Netlify** hosts the site for free. Data updates are handled by **Google Sheets**—editing rows in Google Sheets automatically updates your live Netlify website upon page refresh!</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800 text-sm">1. Push Code to GitHub</h4>
+                    <p>Create a repository named <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">critical-minerals-tracker</code> on GitHub and upload <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">index.html</code>.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800 text-sm">2. Deploy on Netlify</h4>
+                    <ol class="list-decimal pl-4 space-y-1">
+                        <li>Log in to **Netlify** using your GitHub account.</li>
+                        <li>Click **Add new site > Import an existing project > GitHub**.</li>
+                        <li>Select your <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">critical-minerals-tracker</code> repo.</li>
+                        <li>Click **Deploy Site**.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-100">
+                <button onclick="toggleDeployModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-white bg-slate-800 hover:bg-slate-700">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script Engine -->
+    <script>
+        const DEFAULT_CONFIG = [
+            {
+                id: 'us_bilat',
+                name: 'US Bilat Deals',
+                csvUrl: '',
+                sampleData: [
+                    { "Country": "Japan", "Date": "2023-03-28", "Agreement Name": "US-Japan Critical Minerals Agreement", "Agency": "USTR", "Goal": "Trade & Supply Chain", "Key Points": "Waives tariffs on EV minerals; commits to non-market barrier sharing.", "Source": "https://ustr.gov" },
+                    { "Country": "Australia", "Date": "2023-05-20", "Agreement Name": "Climate, Critical Minerals, and Clean Energy Compact", "Agency": "State/DOE", "Goal": "Mining & Processing", "Key Points": "Establishes Ministerial dialogue; funding integration under DPA.", "Source": "https://whitehouse.gov" },
+                    { "Country": "United Kingdom", "Date": "2023-06-08", "Agreement Name": "Atlantic Declaration", "Agency": "White House", "Goal": "Supply Chain Security", "Key Points": "Launches negotiations on UK critical minerals agreement for IRA compliance.", "Source": "https://whitehouse.gov" }
+                ]
+            },
+            {
+                id: 'multilat',
+                name: 'Multilateral Deals',
+                csvUrl: '',
+                sampleData: [
+                    { "Forum / Group": "MSP (Minerals Security Partnership)", "Date": "2023-10-10", "Partners": "US, EU, Japan, Korea, Australia, UK, Canada", "Focus Area": "Project Finance & Processing", "Key Deliverable": "MSP Forum launched to engage producer nations.", "Source": "https://state.gov" },
+                    { "Forum / Group": "G7 Alliance", "Date": "2023-04-16", "Partners": "G7 Economies", "Focus Area": "ESG Standards & Recycling", "Key Deliverable": "5-Point Plan for Critical Minerals Security.", "Source": "https://g7.org" }
+                ]
+            },
+            {
+                id: 'financing',
+                name: 'Financing & DFC Grants',
+                csvUrl: '',
+                sampleData: [
+                    { "Recipient / Project": "TechMet / Lithium & Cobalt", "Country": "Global / Brazil", "Amount": "$50 Million", "Funding Agency": "DFC", "Date": "2023-09-15", "Objective": "Upstream Extraction Expansion" },
+                    { "Recipient / Project": "Graphite Processing", "Country": "Mozambique", "Amount": "$150 Million", "Funding Agency": "DFC / EXIM", "Date": "2023-10-25", "Objective": "Anode Material Processing" }
+                ]
+            }
+        ];
+
+        let tabsConfig = [];
+        let activeTabId = 'us_bilat';
+        let currentRawData = [];
+        let categoryChartInstance = null;
+        let partnerChartInstance = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadConfiguration();
+            renderTabs();
+            renderConfigModalInputs();
+            fetchCurrentTabData();
+        });
+
+        function loadConfiguration() {
+            const saved = localStorage.getItem('cm_tracker_config');
+            if (saved) {
+                try { tabsConfig = JSON.parse(saved); } catch(e) { tabsConfig = DEFAULT_CONFIG; }
+            } else {
+                tabsConfig = DEFAULT_CONFIG;
+            }
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('tabContainer');
+            container.innerHTML = tabsConfig.map(tab => `
+                <button onclick="switchTab('${tab.id}')" 
+                        class="py-4 px-2 whitespace-nowrap text-xs font-medium transition-colors flex items-center space-x-2 ${tab.id === activeTabId ? 'active-tab' : 'border-b-2 border-transparent hover:text-slate-900'}">
+                    <span>${tab.name}</span>
+                    ${tab.csvUrl ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Connected to Google Sheet"></span>' : ''}
+                </button>
+            `).join('');
+        }
+
+        function switchTab(tabId) {
+            activeTabId = tabId;
+            renderTabs();
+            document.getElementById('searchInput').value = '';
+            fetchCurrentTabData();
+        }
+
+        function fetchCurrentTabData() {
+            const tab = tabsConfig.find(t => t.id === activeTabId);
+            document.getElementById('activeTabName').innerText = `Tab: ${tab.name}`;
+            
+            if (tab.csvUrl && tab.csvUrl.trim() !== '') {
+                document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span><span>Fetching Sheet...</span>`;
+                Papa.parse(tab.csvUrl, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        currentRawData = results.data;
+                        document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Google Sheet Live</span>`;
+                        processAndDisplayData(currentRawData);
+                    },
+                    error: function(err) {
+                        document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Fallback Sample</span>`;
+                        currentRawData = tab.sampleData;
+                        processAndDisplayData(currentRawData);
+                    }
+                });
+            } else {
+                document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500"></span><span>Sample Mode</span>`;
+                currentRawData = tab.sampleData;
+                processAndDisplayData(currentRawData);
+            }
+        }
+
+        function processAndDisplayData(data) {
+            populateFilterDropdowns(data);
+            applyFilters();
+        }
+
+        function populateFilterDropdowns(data) {
+            const countrySelect = document.getElementById('countryFilter');
+            const goalSelect = document.getElementById('goalFilter');
+
+            const countries = new Set();
+            const goals = new Set();
+
+            data.forEach(row => {
+                Object.keys(row).forEach(key => {
+                    const k = key.toLowerCase();
+                    if (k.includes('country') || k.includes('partner')) if (row[key]) countries.add(row[key]);
+                    if (k.includes('goal') || k.includes('agency') || k.includes('focus') || k.includes('objective')) if (row[key]) goals.add(row[key]);
+                });
+            });
+
+            countrySelect.innerHTML = '<option value="">All Countries / Partners</option>' + 
+                Array.from(countries).map(c => `<option value="${c}">${c}</option>`).join('');
+
+            goalSelect.innerHTML = '<option value="">All Objectives / Categories</option>' + 
+                Array.from(goals).map(g => `<option value="${g}">${g}</option>`).join('');
+        }
+
+        function applyFilters() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const countryVal = document.getElementById('countryFilter').value;
+            const goalVal = document.getElementById('goalFilter').value;
+
+            const filtered = currentRawData.filter(row => {
+                const matchesSearch = Object.values(row).some(val => String(val).toLowerCase().includes(searchValue));
+                
+                let matchesCountry = true;
+                if (countryVal) {
+                    matchesCountry = Object.entries(row).some(([k, v]) => 
+                        (k.toLowerCase().includes('country') || k.toLowerCase().includes('partner')) && v === countryVal
+                    );
+                }
+
+                let matchesGoal = true;
+                if (goalVal) {
+                    matchesGoal = Object.entries(row).some(([k, v]) => 
+                        (k.toLowerCase().includes('goal') || k.toLowerCase().includes('agency') || k.toLowerCase().includes('focus') || k.toLowerCase().includes('objective')) && v === goalVal
+                    );
+                }
+
+                return matchesSearch && matchesCountry && matchesGoal;
+            });
+
+            renderTable(filtered);
+            updateStatsAndCharts(filtered);
+        }
+
+        function renderTable(data) {
+            const thead = document.getElementById('tableHeader');
+            const tbody = document.getElementById('tableBody');
+            document.getElementById('rowCount').innerText = `Showing ${data.length} entries`;
+
+            if (!data || data.length === 0) {
+                thead.innerHTML = '';
+                tbody.innerHTML = `<tr><td class="p-6 text-center text-slate-400">No matching records found.</td></tr>`;
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            thead.innerHTML = `<tr>` + headers.map(h => `<th class="px-4 py-3">${h}</th>`).join('') + `</tr>`;
+
+            tbody.innerHTML = data.map(row => `
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                    ${headers.map(h => {
+                        let cell = row[h] || '--';
+                        if (String(cell).startsWith('http')) {
+                            cell = `<a href="${cell}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center space-x-1"><span>Link</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>`;
+                        }
+                        return `<td class="px-4 py-3">${cell}</td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
+
+        function updateStatsAndCharts(data) {
+            document.getElementById('statTotalDeals').innerText = data.length;
+
+            const partnerSet = new Set();
+            const categoryCounts = {};
+            const partnerCounts = {};
+
+            data.forEach(row => {
+                Object.entries(row).forEach(([k, v]) => {
+                    const key = k.toLowerCase();
+                    if ((key.includes('country') || key.includes('partner')) && v) {
+                        partnerSet.add(v);
+                        partnerCounts[v] = (partnerCounts[v] || 0) + 1;
+                    }
+                    if ((key.includes('goal') || key.includes('agency') || key.includes('focus') || key.includes('objective')) && v) {
+                        categoryCounts[v] = (categoryCounts[v] || 0) + 1;
+                    }
+                });
+            });
+
+            document.getElementById('statPartners').innerText = partnerSet.size;
+            document.getElementById('statGoals').innerText = Object.keys(categoryCounts).length;
+
+            renderCharts(categoryCounts, partnerCounts);
+        }
+
+        function renderCharts(categoryCounts, partnerCounts) {
+            const catCtx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartInstance) categoryChartInstance.destroy();
+            
+            categoryChartInstance = new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categoryCounts).slice(0, 5),
+                    datasets: [{
+                        data: Object.values(categoryCounts).slice(0, 5),
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+            });
+
+            const partnerCtx = document.getElementById('partnerChart').getContext('2d');
+            if (partnerChartInstance) partnerChartInstance.destroy();
+
+            partnerChartInstance = new Chart(partnerCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(partnerCounts).slice(0, 6),
+                    datasets: [{
+                        label: 'Deals Count',
+                        data: Object.values(partnerCounts).slice(0, 6),
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        }
+
+        function exportCSV() {
+            if (!currentRawData || currentRawData.length === 0) return;
+            const csv = Papa.unparse(currentRawData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${activeTabId}_deals_export.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function renderConfigModalInputs() {
+            const container = document.getElementById('sheetInputs');
+            container.innerHTML = tabsConfig.map((tab) => `
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-xs text-slate-800">${tab.name} Tab</span>
+                        <span class="text-[10px] text-slate-400">CSV URL</span>
+                    </div>
+                    <input type="url" id="csv_input_${tab.id}" value="${tab.csvUrl || ''}" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" 
+                           class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+            `).join('');
+        }
+
+        function toggleConfigModal() {
+            document.getElementById('configModal').classList.toggle('hidden');
+        }
+
+        function toggleDeployModal() {
+            document.getElementById('deployModal').classList.toggle('hidden');
+        }
+
+        function saveConfig() {
+            tabsConfig.forEach(tab => {
+                const input = document.getElementById(`csv_input_${tab.id}`);
+                if (input) tab.csvUrl = input.value.trim();
+            });
+            localStorage.setItem('cm_tracker_config', JSON.stringify(tabsConfig));
+            toggleConfigModal();
+            renderTabs();
+            fetchCurrentTabData();
+        }
+
+        function resetDefaultConfig() {
+            localStorage.removeItem('cm_tracker_config');
+            tabsConfig = DEFAULT_CONFIG;
+            renderConfigModalInputs();
+            renderTabs();
+            fetchCurrentTabData();
+            toggleConfigModal();
+        }
+    </script>
+</body>
+</html>
