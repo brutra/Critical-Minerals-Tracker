@@ -12,6 +12,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         .active-tab {
             border-bottom: 3px solid #2563eb;
@@ -170,7 +173,11 @@ body.dark-mode .dark-mode-btn {
                 </div>
             </div>
         </div>
-
+        <!-- Map Container -->
+        <div class="map-section">
+          <h2>Partner Countries</h2>
+          <div id="partnerMap"></div>
+        </div>
         <!-- Filter Controls -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
             <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
