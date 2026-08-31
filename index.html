@@ -30,6 +30,24 @@
             border-radius: 4px;
         }
         /* Footer Styles */
+
+    #partnerMap {
+  height: 450px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  z-index: 1; /* Keep map beneath fixed navbar/toggles */
+}
+
+.map-section {
+  margin: 30px 0;
+}
+
+/* Dark Mode Adjustments for Map Tiles */
+body.dark-mode #partnerMap {
+  border-color: #444;
+  filter: brightness(0.8) contrast(1.2); /* Softens map tiles in dark mode */
+}
 .site-footer {
   margin-top: 40px;
   padding: 20px;
@@ -620,4 +638,30 @@ body.dark-mode .dark-mode-btn {
   });
 </script>    
 </body>
+    <script>
+  // Initialize the map (centered globally)
+  const map = L.map('partnerMap').setView([20, 0], 2);
+
+  // Add OpenStreetMap tile layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Define partner country markers [Latitude, Longitude]
+  const partnerCountries = [
+    { name: "United States", coords: [37.0902, -95.7129] },
+    { name: "Japan", coords: [36.2048, 138.2529] },
+    { name: "Australia", coords: [-25.2744, 133.7751] },
+    { name: "Germany", coords: [51.1657, 10.4515] },
+    { name: "Indonesia", coords: [-0.7893, 113.9213] }
+  ];
+
+  // Add markers to the map
+  partnerCountries.forEach(country => {
+    L.marker(country.coords)
+      .addTo(map)
+      .bindPopup(`<b>${country.name}</b>`);
+  });
+</script>
 </html>
