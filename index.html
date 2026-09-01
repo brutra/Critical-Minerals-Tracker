@@ -22,22 +22,6 @@
     <!-- World Country Boundaries GeoJSON & TopoJSON -->
     <script src="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
-    <head>
-  <style>
-    :root[data-theme="dark"] {
-      --bg-primary: #0f172a;
-      --bg-surface: #1e293b;
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --color-primary: #3b82f6;
-      --color-primary-hover: #60a5fa;
-    }
-    body {
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-    }
-  </style>
-</head>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -47,8 +31,8 @@
             font-family: 'Merriweather', serif;
         }
         .active-tab {
-            border-bottom: 2px solid #9f1239;
-            color: #9f1239;
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
             font-weight: 600;
         }
         .custom-scrollbar::-webkit-scrollbar {
@@ -73,10 +57,18 @@
             margin: 24px 0;
         }
 
-        /* Dark Mode Styling */
+        /* Editable Text Highlighting in Edit Mode */
+        [contenteditable="true"] {
+            outline: 2px dashed #3b82f6 !important;
+            outline-offset: 4px;
+            border-radius: 4px;
+            background-color: rgba(239, 246, 255, 0.6);
+        }
+
+        /* Dark Mode Styling with High-Contrast Blue Accents */
         body.dark-mode {
             background-color: #0f172a;
-            color: #f1f5f9;
+            color: #f8fafc;
         }
         body.dark-mode header,
         body.dark-mode nav,
@@ -85,13 +77,24 @@
             border-color: #334155 !important;
             color: #f8fafc !important;
         }
+        body.dark-mode [contenteditable="true"] {
+            background-color: rgba(30, 58, 138, 0.4);
+            outline-color: #60a5fa !important;
+        }
         body.dark-mode #partnerMap {
             border-color: #334155;
             background-color: #0f172a;
             filter: brightness(0.85) contrast(1.1);
         }
         body.dark-mode a {
-            color: #f43f5e;
+            color: #60a5fa;
+        }
+        body.dark-mode .text-slate-900 {
+            color: #f8fafc !important;
+        }
+        body.dark-mode .text-slate-600, 
+        body.dark-mode .text-slate-500 {
+            color: #cbd5e1 !important;
         }
         body.dark-mode .dark-mode-btn {
             background-color: #334155;
@@ -107,22 +110,18 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-rose-900 text-white flex items-center justify-center font-bold text-lg font-serif">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg font-serif">
                         T
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-slate-900 leading-tight">Critical Minerals Deal Tracker</h1>
-                        <p class="text-xs text-slate-500 font-normal">Critical Minerals Dashboard focused on US Dealmaking - Updated Weekly</p>
+                        <p class="text-xs text-slate-500 font-normal">Geopolitical Analysis & Supply Chain Policy</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="https://travis-brubaker.com/" target="_blank" class="text-xs text-slate-600 hover:text-rose-900 font-medium transition">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> A Project by Travis Brubaker
+                    <a href="https://travis-brubaker.com/" target="_blank" class="text-xs text-slate-600 hover:text-blue-600 font-medium transition">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Main Site
                     </a>
-                    <button onclick="toggleConfigModal()" class="text-xs border border-slate-300 hover:border-slate-400 text-slate-700 px-3 py-1.5 rounded-md font-medium transition flex items-center space-x-1.5">
-                        <i class="fa-solid fa-gear text-slate-500"></i>
-                        <span>Settings</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -140,6 +139,41 @@
     <!-- Main Content Container -->
     <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
+        <!-- LANDING HERO SECTION (Editable Text Area) -->
+        <section class="card-bg bg-white p-8 rounded-lg border border-slate-200 relative shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                    <i class="fa-solid fa-circle-info mr-1.5 text-[10px]"></i> Project Overview
+                </span>
+                
+                <!-- Edit Controls -->
+                <div class="flex items-center space-x-2">
+                    <button id="editHeroBtn" onclick="toggleHeroEdit()" class="text-xs text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-md font-medium transition flex items-center space-x-1">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span id="editBtnText">Edit Text</span>
+                    </button>
+                    <button id="resetHeroBtn" onclick="resetHeroText()" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-1.5 rounded-md font-medium transition hidden" title="Reset to default text">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Editable Headline -->
+            <h2 id="heroTitle" class="text-2xl sm:text-3xl font-bold text-slate-900 mb-3 font-serif leading-snug">
+                Tracking Geopolitical Agreements & Strategic Supply Chains
+            </h2>
+
+            <!-- Editable Body Text -->
+            <div id="heroBody" class="text-sm text-slate-600 leading-relaxed space-y-3">
+                <p>
+                    This platform tracks global bilateral partnerships, multilateral frameworks, and grant commitments securing critical mineral supply chains for clean energy and defense infrastructure. Such agreements have gained popularity in the last few years, especially in response to Chinese export restrictions and US tariffs. Indeed, since President Trump retook office in January 2026, Washington has pursued an aggressive “all of government” approach to critical minerals (CM), both through executive and legislative efforts. This includes forming bilateral and plurilateral deals with key partners, laws, and executive orders. No longer just a climate or supply chain question, Washington now sees CM policy as essential security, economic and geopolitical drivers.  
+                </p>
+                <p>
+                    Use the interactive dashboard below to explore active bilateral, plurilateral and multilateral agreements, financial commitments, and regional engagement metrics updated weekly via synced policy data sources.
+                </p>
+            </div>
+        </section>
+
         <!-- Top Metrics Bar -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="statsGrid">
             <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
@@ -147,7 +181,7 @@
                     <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Tracked Deals</p>
                     <p id="statTotalDeals" class="text-2xl font-bold text-slate-900 mt-1 font-serif">--</p>
                 </div>
-                <div class="p-2.5 bg-rose-50 text-rose-900 rounded-md">
+                <div class="p-2.5 bg-blue-50 text-blue-600 rounded-md">
                     <i class="fa-solid fa-handshake text-lg"></i>
                 </div>
             </div>
@@ -187,12 +221,12 @@
         <div class="map-section card-bg bg-white p-6 rounded-lg border border-slate-200">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-base font-bold text-slate-900 font-serif flex items-center space-x-2">
-                    <i class="fa-solid fa-map-location-dot text-rose-900 text-sm"></i>
+                    <i class="fa-solid fa-map-location-dot text-blue-600 text-sm"></i>
                     <span>Geopolitical Engagement Map</span>
                 </h2>
                 <div class="flex items-center space-x-4 text-xs text-slate-500">
                     <span class="flex items-center space-x-1.5">
-                        <span class="w-3 h-3 rounded bg-rose-900 inline-block"></span>
+                        <span class="w-3 h-3 rounded bg-blue-600 inline-block"></span>
                         <span>Active Deals / Partners</span>
                     </span>
                     <span class="flex items-center space-x-1.5">
@@ -209,7 +243,7 @@
             <div class="card-bg bg-white p-6 rounded-lg border border-slate-200">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-sm font-bold text-slate-900 font-serif flex items-center space-x-2">
-                        <i class="fa-solid fa-chart-pie text-rose-900"></i>
+                        <i class="fa-solid fa-chart-pie text-blue-600"></i>
                         <span>Objectives / Agencies Breakdown</span>
                     </h3>
                 </div>
@@ -220,7 +254,7 @@
             <div class="card-bg bg-white p-6 rounded-lg border border-slate-200">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-sm font-bold text-slate-900 font-serif flex items-center space-x-2">
-                        <i class="fa-solid fa-chart-column text-rose-900"></i>
+                        <i class="fa-solid fa-chart-column text-blue-600"></i>
                         <span>Top Partner Economies</span>
                     </h3>
                 </div>
@@ -236,14 +270,14 @@
                 <div class="relative w-full md:w-80">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search deals, partners, goals..." 
-                           class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs focus:ring-1 focus:ring-rose-900 focus:outline-none">
+                           class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <select id="countryFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-md focus:ring-1 focus:ring-rose-900 focus:outline-none">
+                    <select id="countryFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-md focus:ring-1 focus:ring-blue-600 focus:outline-none">
                         <option value="">All Countries / Partners</option>
                     </select>
-                    <select id="goalFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-md focus:ring-1 focus:ring-rose-900 focus:outline-none">
+                    <select id="goalFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-md focus:ring-1 focus:ring-blue-600 focus:outline-none">
                         <option value="">All Objectives</option>
                     </select>
                     
@@ -274,43 +308,20 @@
         </div>
 
     </main>
-
-    <!-- Configure Google Sheets Links Modal -->
-    <div id="configModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 space-y-4 border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900 text-sm font-serif flex items-center space-x-2">
-                    <i class="fa-solid fa-table-list text-rose-900"></i>
-                    <span>Connect Google Sheet CSV Links</span>
-                </h3>
-                <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-base"></i></button>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed">
-                Publish each tab of your Google Sheet to the web (<strong>File &gt; Share &gt; Publish to web &gt; Select Tab &gt; Comma-separated values (.csv)</strong>), then paste the corresponding URLs below:
-            </p>
-            <div id="sheetInputs" class="space-y-3 max-h-72 overflow-y-auto custom-scrollbar pr-1">
-                <!-- Input elements generated dynamically per tab -->
-            </div>
-            <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-                <button onclick="resetDefaultConfig()" class="px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">Reset Defaults</button>
-                <button onclick="saveConfig()" class="px-4 py-1.5 rounded-md text-xs font-medium text-white bg-rose-900 hover:bg-rose-950">Save &amp; Sync All Tabs</button>
-            </div>
-        </div>
-    </div>
-
+  
     <!-- Footer Section -->
     <footer class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 mt-auto">
         <div class="max-w-6xl mx-auto px-4 space-y-3">
             <p class="font-serif text-sm font-semibold text-slate-800">Travis Brubaker</p>
             <p class="text-slate-500">International Energy &amp; Climate Policy Expert | Geopolitical Analysis</p>
             <div class="flex justify-center space-x-4 pt-1">
-                <a href="mailto:brubaker.c.travis@gmail.com" class="hover:text-rose-900 transition">Email</a>
+                <a href="mailto:brubaker.c.travis@gmail.com" class="hover:text-blue-600 transition">Email</a>
                 <span>&bull;</span>
-                <a href="https://twitter.com/Tra_brubaker" target="_blank" class="hover:text-rose-900 transition">Twitter / X</a>
+                <a href="https://twitter.com/Tra_brubaker" target="_blank" class="hover:text-blue-600 transition">Twitter / X</a>
                 <span>&bull;</span>
-                <a href="https://linkedin.com/in/trabru" target="_blank" class="hover:text-rose-900 transition">LinkedIn</a>
+                <a href="https://linkedin.com/in/trabru" target="_blank" class="hover:text-blue-600 transition">LinkedIn</a>
                 <span>&bull;</span>
-                <a href="https://travis-brubaker.com/" target="_blank" class="hover:text-rose-900 transition">Personal Website</a>
+                <a href="https://travis-brubaker.com/" target="_blank" class="hover:text-blue-600 transition">Personal Website</a>
             </div>
             <div class="pt-2">
                 <button id="darkModeToggle" class="dark-mode-btn text-xs border border-slate-300 px-3 py-1 rounded-md text-slate-600 hover:bg-slate-50 transition">
@@ -322,6 +333,9 @@
 
     <!-- Main Application Script Engine -->
     <script>
+        const DEFAULT_HERO_TITLE = "Tracking Geopolitical Agreements & Strategic Supply Chains";
+        const DEFAULT_HERO_BODY = `<p>This platform tracks global bilateral partnerships, multilateral frameworks, and grant commitments securing critical mineral supply chains for clean energy and defense infrastructure.</p><p>Use the interactive dashboard below to explore active bilateral agreements, financial commitments, and regional engagement metrics updated directly via synced policy data sources.</p>`;
+
         const DEFAULT_CONFIG = [
             {
                 id: 'us_bilat',
@@ -359,13 +373,13 @@
         let currentRawData = [];
         let categoryChartInstance = null;
         let partnerChartInstance = null;
+        let isEditingHero = false;
 
         // Map Engine Variables
         let mapInstance = null;
         let geoJsonLayer = null;
         let worldGeoData = null;
 
-        // Common country name alias lookup table
         const COUNTRY_NAME_MAP = {
             "us": "United States of America",
             "usa": "United States of America",
@@ -379,12 +393,54 @@
         };
 
         window.addEventListener('DOMContentLoaded', () => {
+            loadHeroText();
             loadConfiguration();
             renderTabs();
             renderConfigModalInputs();
             initMap();
             fetchCurrentTabData();
         });
+
+        // Editable Hero Functions
+        function loadHeroText() {
+            const savedTitle = localStorage.getItem('hero_title');
+            const savedBody = localStorage.getItem('hero_body');
+            
+            if (savedTitle) document.getElementById('heroTitle').innerText = savedTitle;
+            if (savedBody) document.getElementById('heroBody').innerHTML = savedBody;
+        }
+
+        function toggleHeroEdit() {
+            const title = document.getElementById('heroTitle');
+            const body = document.getElementById('heroBody');
+            const btnText = document.getElementById('editBtnText');
+            const resetBtn = document.getElementById('resetHeroBtn');
+
+            isEditingHero = !isEditingHero;
+
+            if (isEditingHero) {
+                title.contentEditable = "true";
+                body.contentEditable = "true";
+                btnText.innerText = "Save Text";
+                resetBtn.classList.remove('hidden');
+            } else {
+                title.contentEditable = "false";
+                body.contentEditable = "false";
+                btnText.innerText = "Edit Text";
+                resetBtn.classList.add('hidden');
+
+                localStorage.setItem('hero_title', title.innerText.trim());
+                localStorage.setItem('hero_body', body.innerHTML.trim());
+            }
+        }
+
+        function resetHeroText() {
+            document.getElementById('heroTitle').innerText = DEFAULT_HERO_TITLE;
+            document.getElementById('heroBody').innerHTML = DEFAULT_HERO_BODY;
+            localStorage.removeItem('hero_title');
+            localStorage.removeItem('hero_body');
+            if (isEditingHero) toggleHeroEdit();
+        }
 
         function loadConfiguration() {
             const saved = localStorage.getItem('cm_tracker_config');
@@ -517,7 +573,7 @@
                     ${headers.map(h => {
                         let cell = row[h] || '--';
                         if (String(cell).startsWith('http')) {
-                            cell = `<a href="${cell}" target="_blank" class="text-rose-900 font-medium hover:underline inline-flex items-center space-x-1"><span>Link</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>`;
+                            cell = `<a href="${cell}" target="_blank" class="text-blue-600 font-medium hover:underline inline-flex items-center space-x-1"><span>Link</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>`;
                         }
                         return `<td class="px-4 py-3">${cell}</td>`;
                     }).join('')}
@@ -567,7 +623,7 @@
                     labels: Object.keys(categoryCounts).slice(0, 5),
                     datasets: [{
                         data: Object.values(categoryCounts).slice(0, 5),
-                        backgroundColor: ['#8c1d40', '#0f766e', '#d97706', '#4338ca', '#be185d']
+                        backgroundColor: ['#2563eb', '#0f766e', '#d97706', '#4338ca', '#0284c7']
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, family: 'Inter' } } } } }
@@ -583,14 +639,14 @@
                     datasets: [{
                         label: 'Deals Count',
                         data: Object.values(partnerCounts).slice(0, 6),
-                        backgroundColor: '#8c1d40'
+                        backgroundColor: '#2563eb'
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } } } }
             });
         }
 
-        // --- Leaflet Interactive Map & Choropleth Logic ---
+        // --- Leaflet Map Engine with CARTO Light Theme ---
         function initMap() {
             mapInstance = L.map('partnerMap', {
                 minZoom: 1,
@@ -598,10 +654,15 @@
                 attributionControl: false
             }).setView([20, 0], 2);
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(mapInstance);
+            // CARTO Light Basemap with your API Key
+            L.tileLayer(
+                'https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png?key=cb1_2o6p_1_92d50d3d370e2dbe39c76cd5', 
+                {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                }
+            ).addTo(mapInstance);
 
             // Fetch TopoJSON World Polygons
             fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
@@ -613,14 +674,7 @@
                     }
                 });
         }
-const cartoLight = L.tileLayer(
-  'https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png?key=cb1_2o6p_1_92d50d3d370e2dbe39c76cd5', 
-  {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 20
-  }
-).addTo(map);
+
         function updateMapMarkers(data) {
             if (!mapInstance || !worldGeoData) return;
 
@@ -652,7 +706,7 @@ const cartoLight = L.tileLayer(
                 });
             };
 
-            // Render country shapes matching website palette
+            // Blue theme highlight colors
             geoJsonLayer = L.geoJson(worldGeoData, {
                 style: function(feature) {
                     const countryName = feature.properties.name;
@@ -661,7 +715,7 @@ const cartoLight = L.tileLayer(
 
                     if (count > 0) {
                         return {
-                            fillColor: '#8c1d40', // Policy/Academic Crimson Fill
+                            fillColor: '#2563eb', // Primary Blue
                             weight: 1,
                             opacity: 1,
                             color: '#ffffff',
@@ -687,7 +741,7 @@ const cartoLight = L.tileLayer(
                             const l = e.target;
                             l.setStyle({
                                 weight: 2,
-                                color: '#4c0519',
+                                color: '#1d4ed8',
                                 fillOpacity: 0.95
                             });
                             if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
@@ -703,7 +757,7 @@ const cartoLight = L.tileLayer(
                         layer.bindPopup(`
                             <div class="text-xs font-sans">
                                 <strong class="text-sm font-bold text-slate-900 font-serif">${countryName}</strong><br/>
-                                <span class="text-rose-900 font-semibold">${count} Tracked Deal(s) / Initiative(s)</span>
+                                <span class="text-blue-600 font-semibold">${count} Tracked Deal(s) / Initiative(s)</span>
                             </div>
                         `);
                     } else {
@@ -717,7 +771,7 @@ const cartoLight = L.tileLayer(
             }).addTo(mapInstance);
         }
 
-        // --- Modal & Control Functions ---
+        // --- Modal & Configuration Controls ---
         function renderConfigModalInputs() {
             const container = document.getElementById('sheetInputs');
             container.innerHTML = tabsConfig.map((tab) => `
@@ -727,7 +781,7 @@ const cartoLight = L.tileLayer(
                         <span class="text-[10px] text-slate-400">CSV URL</span>
                     </div>
                     <input type="url" id="csv_input_${tab.id}" value="${tab.csvUrl || ''}" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" 
-                           class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-700 focus:ring-1 focus:ring-rose-900 focus:outline-none">
+                           class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-700 focus:ring-1 focus:ring-blue-600 focus:outline-none">
                 </div>
             `).join('');
         }
@@ -756,7 +810,7 @@ const cartoLight = L.tileLayer(
             toggleConfigModal();
         }
 
-        // Dark Mode Controller
+        // Dark Mode Toggle Logic
         const toggleBtn = document.getElementById('darkModeToggle');
         if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
