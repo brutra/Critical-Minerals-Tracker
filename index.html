@@ -19,9 +19,6 @@
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- World Country Boundaries GeoJSON & TopoJSON -->
-    <script src="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -65,7 +62,7 @@
             background-color: rgba(239, 246, 255, 0.6);
         }
 
-        /* Dark Mode Styling with High-Contrast Blue Accents */
+        /* Dark Mode Styling */
         body.dark-mode {
             background-color: #0f172a;
             color: #f8fafc;
@@ -119,6 +116,10 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <button onclick="toggleConfigModal()" class="text-xs border border-slate-300 hover:border-slate-400 text-slate-700 px-3 py-1.5 rounded-md font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-gear text-slate-500"></i>
+                        <span>Settings</span>
+                    </button>
                     <a href="https://travis-brubaker.com/" target="_blank" class="text-xs text-slate-600 hover:text-blue-600 font-medium transition">
                         <i class="fa-solid fa-arrow-left mr-1"></i> Main Site
                     </a>
@@ -166,7 +167,10 @@
             <!-- Editable Body Text -->
             <div id="heroBody" class="text-sm text-slate-600 leading-relaxed space-y-3">
                 <p>
-                    This platform tracks global bilateral partnerships, multilateral frameworks, and grant commitments securing critical mineral supply chains for clean energy and defense infrastructure. Such agreements have gained popularity in the last few years, especially in response to Chinese export restrictions and US tariffs. Indeed, since President Trump retook office in January 2026, Washington has pursued an aggressive “all of government” approach to critical minerals (CM), both through executive and legislative efforts. This includes forming bilateral and plurilateral deals with key partners, laws, and executive orders. No longer just a climate or supply chain question, Washington now sees CM policy as essential security, economic and geopolitical drivers.  
+                    This platform tracks global bilateral partnerships, multilateral frameworks, and grant commitments securing critical mineral supply chains for clean energy and defense infrastructure. Such agreements have gained popularity in the last few years, especially in response to Chinese export restrictions and US tariffs.  
+                </p>
+                <p>
+                    Indeed, since President Trump retook office in January 2026, Washington has pursued an aggressive “all of government” approach to critical minerals (CM), both through executive and legislative efforts. This includes forming bilateral and plurilateral deals with key partners, laws, and executive orders. No longer just a climate or supply chain question, Washington now sees CM policy as essential security, economic and geopolitical drivers. 
                 </p>
                 <p>
                     Use the interactive dashboard below to explore active bilateral, plurilateral and multilateral agreements, financial commitments, and regional engagement metrics updated weekly via synced policy data sources.
@@ -294,7 +298,7 @@
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead id="tableHeader" class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
-                        <!-- Columns rendered dynamically based on active sheet -->
+                        <!-- Columns rendered dynamically -->
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
                         <!-- Rows rendered dynamically -->
@@ -309,6 +313,29 @@
 
     </main>
   
+    <!-- Configuration Modal for Google Sheets CSV Links -->
+    <div id="configModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 space-y-4 border border-slate-200">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm font-serif flex items-center space-x-2">
+                    <i class="fa-solid fa-table-list text-blue-600"></i>
+                    <span>Connect Google Sheet CSV Links</span>
+                </h3>
+                <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Publish each tab of your Google Sheet to the web (<strong>File &gt; Share &gt; Publish to web &gt; Select Tab &gt; Comma-separated values (.csv)</strong>), then paste the corresponding URLs below:
+            </p>
+            <div id="sheetInputs" class="space-y-3 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+                <!-- Inputs generated dynamically per tab -->
+            </div>
+            <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button onclick="resetDefaultConfig()" class="px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">Reset Defaults</button>
+                <button onclick="saveConfig()" class="px-4 py-1.5 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700">Save &amp; Sync All Tabs</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer Section -->
     <footer class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 mt-auto">
         <div class="max-w-6xl mx-auto px-4 space-y-3">
@@ -377,19 +404,19 @@
 
         // Map Engine Variables
         let mapInstance = null;
-        let geoJsonLayer = null;
-        let worldGeoData = null;
+        let markersGroup = null;
 
-        const COUNTRY_NAME_MAP = {
-            "us": "United States of America",
-            "usa": "United States of America",
-            "united states": "United States of America",
-            "uk": "United Kingdom",
-            "united kingdom": "United Kingdom",
-            "south korea": "South Korea",
-            "korea": "South Korea",
-            "drc": "Democratic Republic of the Congo",
-            "congo": "Democratic Republic of the Congo"
+        const COUNTRY_COORDS = {
+            "Japan": [36.2048, 138.2529],
+            "Australia": [-25.2744, 133.7751],
+            "United Kingdom": [55.3781, -3.4360],
+            "Brazil": [-14.2350, -51.9253],
+            "Mozambique": [-18.6657, 35.5296],
+            "Indonesia": [-0.7893, 113.9213],
+            "Canada": [56.1304, -106.3468],
+            "Germany": [51.1657, 10.4515],
+            "South Korea": [35.9078, 127.7669],
+            "United States": [37.0902, -95.7129]
         };
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -399,6 +426,10 @@
             renderConfigModalInputs();
             initMap();
             fetchCurrentTabData();
+
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+            });
         });
 
         // Editable Hero Functions
@@ -440,6 +471,43 @@
             localStorage.removeItem('hero_title');
             localStorage.removeItem('hero_body');
             if (isEditingHero) toggleHeroEdit();
+        }
+
+        // Configuration Modal Functions
+        function toggleConfigModal() {
+            const modal = document.getElementById('configModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function renderConfigModalInputs() {
+            const container = document.getElementById('sheetInputs');
+            container.innerHTML = tabsConfig.map(tab => `
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">${tab.name} CSV URL</label>
+                    <input type="text" id="cfg_url_${tab.id}" value="${tab.csvUrl || ''}" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
+                           class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
+                </div>
+            `).join('');
+        }
+
+        function saveConfig() {
+            tabsConfig.forEach(tab => {
+                const val = document.getElementById(`cfg_url_${tab.id}`).value.trim();
+                tab.csvUrl = val;
+            });
+            localStorage.setItem('cm_tracker_config', JSON.stringify(tabsConfig));
+            toggleConfigModal();
+            renderTabs();
+            fetchCurrentTabData();
+        }
+
+        function resetDefaultConfig() {
+            tabsConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+            localStorage.removeItem('cm_tracker_config');
+            renderConfigModalInputs();
+            renderTabs();
+            fetchCurrentTabData();
+            toggleConfigModal();
         }
 
         function loadConfiguration() {
@@ -610,219 +678,79 @@
             document.getElementById('statPartners').innerText = partnerSet.size;
             document.getElementById('statGoals').innerText = Object.keys(categoryCounts).length;
 
-            renderCharts(categoryCounts, partnerCounts);
-        }
-
-        function renderCharts(categoryCounts, partnerCounts) {
+            // Render Category Chart
             const catCtx = document.getElementById('categoryChart').getContext('2d');
             if (categoryChartInstance) categoryChartInstance.destroy();
-            
             categoryChartInstance = new Chart(catCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(categoryCounts).slice(0, 5),
+                    labels: Object.keys(categoryCounts),
                     datasets: [{
-                        data: Object.values(categoryCounts).slice(0, 5),
-                        backgroundColor: ['#2563eb', '#0f766e', '#d97706', '#4338ca', '#0284c7']
+                        data: Object.values(categoryCounts),
+                        backgroundColor: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, family: 'Inter' } } } } }
+                options: { responsive: true, maintainAspectRatio: false }
             });
 
+            // Render Partner Chart
             const partnerCtx = document.getElementById('partnerChart').getContext('2d');
             if (partnerChartInstance) partnerChartInstance.destroy();
-
             partnerChartInstance = new Chart(partnerCtx, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(partnerCounts).slice(0, 6),
+                    labels: Object.keys(partnerCounts),
                     datasets: [{
-                        label: 'Deals Count',
-                        data: Object.values(partnerCounts).slice(0, 6),
+                        label: 'Total Deals / Partnerships',
+                        data: Object.values(partnerCounts),
                         backgroundColor: '#2563eb'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } } } }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
-        // --- Leaflet Map Engine with CARTO Light Theme ---
         function initMap() {
-            mapInstance = L.map('partnerMap', {
-                minZoom: 1,
-                maxZoom: 6,
-                attributionControl: false
-            }).setView([20, 0], 2);
+            mapInstance = L.map('partnerMap').setView([20, 10], 2);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(mapInstance);
 
-            // CARTO Light Basemap with your API Key
-            L.tileLayer(
-                'https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png?key=cb1_2o6p_1_92d50d3d370e2dbe39c76cd5', 
-                {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                    subdomains: 'abcd',
-                    maxZoom: 20
-                }
-            ).addTo(mapInstance);
-
-            // Fetch TopoJSON World Polygons
-            fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
-                .then(response => response.json())
-                .then(topoData => {
-                    worldGeoData = topojson.feature(topoData, topoData.objects.countries);
-                    if (currentRawData && currentRawData.length > 0) {
-                        applyFilters();
-                    }
-                });
+            markersGroup = L.layerGroup().addTo(mapInstance);
         }
 
         function updateMapMarkers(data) {
-            if (!mapInstance || !worldGeoData) return;
+            if (!markersGroup) return;
+            markersGroup.clearLayers();
 
-            if (geoJsonLayer) {
-                mapInstance.removeLayer(geoJsonLayer);
-            }
-
-            const partnerCounts = {};
             data.forEach(row => {
-                Object.entries(row).forEach(([key, val]) => {
-                    const k = key.toLowerCase();
-                    if ((k.includes('country') || k.includes('partner') || k.includes('partners')) && val) {
-                        const countries = String(val).split(/[,/]/);
-                        countries.forEach(c => {
-                            const cleanName = c.trim();
-                            if (cleanName) {
-                                partnerCounts[cleanName] = (partnerCounts[cleanName] || 0) + 1;
-                            }
-                        });
+                let countryName = '';
+                Object.entries(row).forEach(([k, v]) => {
+                    if ((k.toLowerCase().includes('country') || k.toLowerCase().includes('partner')) && v) {
+                        countryName = v;
                     }
                 });
-            });
 
-            const isCountryActive = (geoName) => {
-                const gNameLower = geoName.toLowerCase();
-                return Object.keys(partnerCounts).find(sheetCountry => {
-                    const mappedName = COUNTRY_NAME_MAP[sheetCountry.toLowerCase()] || sheetCountry;
-                    return mappedName.toLowerCase() === gNameLower;
-                });
-            };
-
-            // Blue theme highlight colors
-            geoJsonLayer = L.geoJson(worldGeoData, {
-                style: function(feature) {
-                    const countryName = feature.properties.name;
-                    const matchedKey = isCountryActive(countryName);
-                    const count = matchedKey ? partnerCounts[matchedKey] : 0;
-
-                    if (count > 0) {
-                        return {
-                            fillColor: '#2563eb', // Primary Blue
-                            weight: 1,
-                            opacity: 1,
-                            color: '#ffffff',
-                            fillOpacity: 0.8
-                        };
-                    } else {
-                        return {
-                            fillColor: '#f1f5f9',
-                            weight: 0.5,
-                            opacity: 1,
-                            color: '#cbd5e1',
-                            fillOpacity: 0.5
-                        };
-                    }
-                },
-                onEachFeature: function(feature, layer) {
-                    const countryName = feature.properties.name;
-                    const matchedKey = isCountryActive(countryName);
-                    const count = matchedKey ? partnerCounts[matchedKey] : 0;
-
-                    layer.on({
-                        mouseover: function(e) {
-                            const l = e.target;
-                            l.setStyle({
+                if (countryName) {
+                    const countries = countryName.split(/[,/]/);
+                    countries.forEach(c => {
+                        const trimmed = c.trim();
+                        if (COUNTRY_COORDS[trimmed]) {
+                            L.circleMarker(COUNTRY_COORDS[trimmed], {
+                                radius: 7,
+                                fillColor: '#2563eb',
+                                color: '#ffffff',
                                 weight: 2,
-                                color: '#1d4ed8',
-                                fillOpacity: 0.95
-                            });
-                            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-                                l.bringToFront();
-                            }
-                        },
-                        mouseout: function(e) {
-                            geoJsonLayer.resetStyle(e.target);
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).bindPopup(`<strong>${trimmed}</strong><br/>Active Tracked Record`).addTo(markersGroup);
                         }
                     });
-
-                    if (count > 0) {
-                        layer.bindPopup(`
-                            <div class="text-xs font-sans">
-                                <strong class="text-sm font-bold text-slate-900 font-serif">${countryName}</strong><br/>
-                                <span class="text-blue-600 font-semibold">${count} Tracked Deal(s) / Initiative(s)</span>
-                            </div>
-                        `);
-                    } else {
-                        layer.bindPopup(`
-                            <div class="text-xs font-sans text-slate-500">
-                                <strong>${countryName}</strong><br/>No active deals recorded in current view.
-                            </div>
-                        `);
-                    }
                 }
-            }).addTo(mapInstance);
-        }
-
-        // --- Modal & Configuration Controls ---
-        function renderConfigModalInputs() {
-            const container = document.getElementById('sheetInputs');
-            container.innerHTML = tabsConfig.map((tab) => `
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-md space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <span class="font-semibold text-xs text-slate-800">${tab.name} Tab</span>
-                        <span class="text-[10px] text-slate-400">CSV URL</span>
-                    </div>
-                    <input type="url" id="csv_input_${tab.id}" value="${tab.csvUrl || ''}" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" 
-                           class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-700 focus:ring-1 focus:ring-blue-600 focus:outline-none">
-                </div>
-            `).join('');
-        }
-
-        function toggleConfigModal() {
-            document.getElementById('configModal').classList.toggle('hidden');
-        }
-
-        function saveConfig() {
-            tabsConfig.forEach(tab => {
-                const input = document.getElementById(`csv_input_${tab.id}`);
-                if (input) tab.csvUrl = input.value.trim();
             });
-            localStorage.setItem('cm_tracker_config', JSON.stringify(tabsConfig));
-            toggleConfigModal();
-            renderTabs();
-            fetchCurrentTabData();
         }
-
-        function resetDefaultConfig() {
-            localStorage.removeItem('cm_tracker_config');
-            tabsConfig = DEFAULT_CONFIG;
-            renderConfigModalInputs();
-            renderTabs();
-            fetchCurrentTabData();
-            toggleConfigModal();
-        }
-
-        // Dark Mode Toggle Logic
-        const toggleBtn = document.getElementById('darkModeToggle');
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
-        }
-        toggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            if (document.body.classList.contains('dark-mode')) {
-                localStorage.setItem('theme', 'dark');
-            } else {
-                localStorage.setItem('theme', 'light');
-            }
-        });
     </script>
 </body>
 </html>
