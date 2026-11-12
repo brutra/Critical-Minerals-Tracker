@@ -1,756 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Critical Minerals Deal Tracker | Geopolitical & Policy Analytics</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter (sans) & Merriweather (serif) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
-    <!-- PapaParse for Google Sheets CSV parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- Chart.js for live analytics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            color: #1e293b;
-        }
-        h1, h2, h3, .serif-heading {
-            font-family: 'Merriweather', serif;
-        }
-        .active-tab {
-            border-bottom: 2px solid #2563eb;
-            color: #2563eb;
-            font-weight: 600;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 5px;
-            width: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 4px;
-        }
-        
-        #partnerMap {
-            height: 480px;
-            width: 100%;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            z-index: 1;
-            background-color: #f8fafc;
-        }
-
-        .map-section {
-            margin: 24px 0;
-        }
-
-        /* Editable Text Highlighting in Edit Mode */
-        [contenteditable="true"] {
-            outline: 2px dashed #3b82f6 !important;
-            outline-offset: 4px;
-            border-radius: 4px;
-            background-color: rgba(239, 246, 255, 0.6);
-        }
-
-        /* Dark Mode Styling */
-        body.dark-mode {
-            background-color: #0f172a;
-            color: #f8fafc;
-        }
-        body.dark-mode header,
-        body.dark-mode nav,
-        body.dark-mode .card-bg {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
-            color: #f8fafc !important;
-        }
-        body.dark-mode [contenteditable="true"] {
-            background-color: rgba(30, 58, 138, 0.4);
-            outline-color: #60a5fa !important;
-        }
-        body.dark-mode #partnerMap {
-            border-color: #334155;
-            background-color: #0f172a;
-            filter: brightness(0.85) contrast(1.1);
-        }
-        body.dark-mode a {
-            color: #60a5fa;
-        }
-        body.dark-mode .text-slate-900 {
-            color: #f8fafc !important;
-        }
-        body.dark-mode .text-slate-600, 
-        body.dark-mode .text-slate-500 {
-            color: #cbd5e1 !important;
-        }
-        body.dark-mode .dark-mode-btn {
-            background-color: #334155;
-            color: #fff;
-            border-color: #475569;
-        }
-    </style>
-</head>
-<body class="bg-slate-50 min-h-screen flex flex-col transition-colors duration-200">
-
-    <!-- Header Navigation -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg font-serif">
-                        T
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-slate-900 leading-tight">Critical Minerals Deal Tracker</h1>
-                        <p class="text-xs text-slate-500 font-normal">Geopolitical Analysis & Supply Chain Policy</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button onclick="toggleConfigModal()" class="text-xs border border-slate-300 hover:border-slate-400 text-slate-700 px-3 py-1.5 rounded-md font-medium transition flex items-center space-x-1.5">
-                        <i class="fa-solid fa-gear text-slate-500"></i>
-                        <span>Settings</span>
-                    </button>
-                    <a href="https://travis-brubaker.com/" target="_blank" class="text-xs text-slate-600 hover:text-blue-600 font-medium transition">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Main Site
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Dynamic Tab Navigation Bar -->
-    <nav class="bg-white border-b border-slate-200 sticky top-20 z-40">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div id="tabContainer" class="flex space-x-8 overflow-x-auto custom-scrollbar text-xs text-slate-600">
-                <!-- Tabs rendered dynamically -->
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content Container -->
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-        <!-- LANDING HERO SECTION (Editable Text Area) -->
-        <section class="card-bg bg-white p-8 rounded-lg border border-slate-200 relative shadow-sm">
-            <div class="flex justify-between items-start mb-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                    <i class="fa-solid fa-circle-info mr-1.5 text-[10px]"></i> Project Overview
-                </span>
-                
-                <!-- Edit Controls -->
-                <div class="flex items-center space-x-2">
-                    <button id="editHeroBtn" onclick="toggleHeroEdit()" class="text-xs text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-md font-medium transition flex items-center space-x-1">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span id="editBtnText">Edit Text</span>
-                    </button>
-                    <button id="resetHeroBtn" onclick="resetHeroText()" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-1.5 rounded-md font-medium transition hidden" title="Reset to default text">
-                        <i class="fa-solid fa-arrow-rotate-left"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Editable Headline -->
-            <h2 id="heroTitle" class="text-2xl sm:text-3xl font-bold text-slate-900 mb-3 font-serif leading-snug">
-                Tracking Geopolitical Agreements & Strategic Supply Chains
-            </h2>
-
-            <!-- Editable Body Text -->
-            <div id="heroBody" class="text-sm text-slate-600 leading-relaxed space-y-3">
-                <p>
-                    This platform tracks global bilateral partnerships, multilateral frameworks, and grant commitments securing critical mineral supply chains for clean energy and defense infrastructure. Such agreements have gained popularity in the last few years, especially in response to Chinese export restrictions and US tariffs.  
-                </p>
-                <p>
-                    Indeed, since President Trump retook office in January 2026, Washington has pursued an aggressive “all of government” approach to critical minerals (CM), both through executive and legislative efforts. This includes forming bilateral and plurilateral deals with key partners, laws, and executive orders. No longer just a climate or supply chain question, Washington now sees CM policy as essential security, economic and geopolitical drivers. 
-                </p>
-                <p>
-                    Use the interactive dashboard below to explore active bilateral, plurilateral and multilateral agreements, financial commitments, and regional engagement metrics updated weekly via synced policy data sources.
-                </p>
-            </div>
-        </section>
-
-        <!-- Top Metrics Bar -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="statsGrid">
-            <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Tracked Deals</p>
-                    <p id="statTotalDeals" class="text-2xl font-bold text-slate-900 mt-1 font-serif">--</p>
-                </div>
-                <div class="p-2.5 bg-blue-50 text-blue-600 rounded-md">
-                    <i class="fa-solid fa-handshake text-lg"></i>
-                </div>
-            </div>
-            <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Unique Partners</p>
-                    <p id="statPartners" class="text-2xl font-bold text-slate-900 mt-1 font-serif">--</p>
-                </div>
-                <div class="p-2.5 bg-slate-100 text-slate-700 rounded-md">
-                    <i class="fa-solid fa-earth-americas text-lg"></i>
-                </div>
-            </div>
-            <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Strategic Focus Areas</p>
-                    <p id="statGoals" class="text-2xl font-bold text-slate-900 mt-1 font-serif">--</p>
-                </div>
-                <div class="p-2.5 bg-amber-50 text-amber-800 rounded-md">
-                    <i class="fa-solid fa-bullseye text-lg"></i>
-                </div>
-            </div>
-            <div class="card-bg bg-white p-5 rounded-lg border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Data Sync Status</p>
-                    <p id="statStatus" class="text-xs font-semibold text-emerald-700 mt-2 flex items-center space-x-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span>Live / Ready</span>
-                    </p>
-                </div>
-                <div class="p-2.5 bg-slate-100 text-slate-700 rounded-md">
-                    <i class="fa-solid fa-rotate text-lg"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Interactive Map Container -->
-        <div class="map-section card-bg bg-white p-6 rounded-lg border border-slate-200">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-base font-bold text-slate-900 font-serif flex items-center space-x-2">
-                    <i class="fa-solid fa-map-location-dot text-blue-600 text-sm"></i>
-                    <span>Geopolitical Engagement Map</span>
-                </h2>
-                <div class="flex items-center space-x-4 text-xs text-slate-500">
-                    <span class="flex items-center space-x-1.5">
-                        <span class="w-3 h-3 rounded bg-blue-600 inline-block"></span>
-                        <span>Active Deals / Partners</span>
-                    </span>
-                    <span class="flex items-center space-x-1.5">
-                        <span class="w-3 h-3 rounded bg-slate-200 inline-block border border-slate-300"></span>
-                        <span>No Active Deals</span>
-                    </span>
-                </div>
-            </div>
-            <div id="partnerMap"></div>
-        </div>
-
-        <!-- Analytics Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="card-bg bg-white p-6 rounded-lg border border-slate-200">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-slate-900 font-serif flex items-center space-x-2">
-                        <i class="fa-solid fa-chart-pie text-blue-600"></i>
-                        <span>Objectives / Agencies Breakdown</span>
-                    </h3>
-                </div>
-                <div class="h-60 relative">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-            <div class="card-bg bg-white p-6 rounded-lg border border-slate-200">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-slate-900 font-serif flex items-center space-x-2">
-                        <i class="fa-solid fa-chart-column text-blue-600"></i>
-                        <span>Top Partner Economies</span>
-                    </h3>
-                </div>
-                <div class="h-60 relative">
-                    <canvas id="partnerChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filter Controls -->
-        <div class="card-bg bg-white p-4 rounded-lg border border-slate-200 space-y-3">
-            <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
-                <div class="relative w-full md:w-80">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search deals, partners, goals..." 
-                           class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <select id="countryFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-md focus:ring-1 focus:ring-blue-600 focus:outline-none">
-                        <option value="">All Countries / Partners</option>
-                    </select>
-                    <select id="goalFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-xs text-slate-700 py-2 px-3 rounded-md focus:ring-1 focus:ring-blue-600 focus:outline-none">
-                        <option value="">All Objectives</option>
-                    </select>
-                    
-                    <button onclick="fetchCurrentTabData()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 rounded-md text-xs font-medium border border-slate-200 flex items-center space-x-1.5 transition">
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                        <span>Refresh Sheet</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dynamic Data Table -->
-        <div class="card-bg bg-white rounded-lg border border-slate-200 overflow-hidden">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead id="tableHeader" class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
-                        <!-- Columns rendered dynamically -->
-                    </thead>
-                    <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
-                        <!-- Rows rendered dynamically -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-                <span id="rowCount">Showing 0 entries</span>
-                <span id="activeTabName" class="font-medium text-slate-700">Tab: US Bilateral Deals</span>
-            </div>
-        </div>
-
-    </main>
-  
-    <!-- Configuration Modal for Google Sheets CSV Links -->
-    <div id="configModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 space-y-4 border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900 text-sm font-serif flex items-center space-x-2">
-                    <i class="fa-solid fa-table-list text-blue-600"></i>
-                    <span>Connect Google Sheet CSV Links</span>
-                </h3>
-                <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-base"></i></button>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed">
-                Publish each tab of your Google Sheet to the web (<strong>File &gt; Share &gt; Publish to web &gt; Select Tab &gt; Comma-separated values (.csv)</strong>), then paste the corresponding URLs below:
-            </p>
-            <div id="sheetInputs" class="space-y-3 max-h-72 overflow-y-auto custom-scrollbar pr-1">
-                <!-- Inputs generated dynamically per tab -->
-            </div>
-            <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-                <button onclick="resetDefaultConfig()" class="px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">Reset Defaults</button>
-                <button onclick="saveConfig()" class="px-4 py-1.5 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700">Save &amp; Sync All Tabs</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 mt-auto">
-        <div class="max-w-6xl mx-auto px-4 space-y-3">
-            <p class="font-serif text-sm font-semibold text-slate-800">Travis Brubaker</p>
-            <p class="text-slate-500">International Energy &amp; Climate Policy Expert | Geopolitical Analysis</p>
-            <div class="flex justify-center space-x-4 pt-1">
-                <a href="mailto:brubaker.c.travis@gmail.com" class="hover:text-blue-600 transition">Email</a>
-                <span>&bull;</span>
-                <a href="https://twitter.com/Tra_brubaker" target="_blank" class="hover:text-blue-600 transition">Twitter / X</a>
-                <span>&bull;</span>
-                <a href="https://linkedin.com/in/trabru" target="_blank" class="hover:text-blue-600 transition">LinkedIn</a>
-                <span>&bull;</span>
-                <a href="https://travis-brubaker.com/" target="_blank" class="hover:text-blue-600 transition">Personal Website</a>
-            </div>
-            <div class="pt-2">
-                <button id="darkModeToggle" class="dark-mode-btn text-xs border border-slate-300 px-3 py-1 rounded-md text-slate-600 hover:bg-slate-50 transition">
-                    Toggle Dark Mode
-                </button>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Main Application Script Engine -->
-    <script>
-        const DEFAULT_HERO_TITLE = "Tracking Geopolitical Agreements & Strategic Supply Chains";
-        const DEFAULT_HERO_BODY = `<p>This platform tracks global bilateral partnerships, multilateral frameworks, and grant commitments securing critical mineral supply chains for clean energy and defense infrastructure.</p><p>Use the interactive dashboard below to explore active bilateral agreements, financial commitments, and regional engagement metrics updated directly via synced policy data sources.</p>`;
-
-        const DEFAULT_CONFIG = [
-            {
-                id: 'us_bilat',
-                name: 'US Bilateral Deals',
-                csvUrl: '',
-                sampleData: [
-                    { "Country": "Japan", "Date": "2023-03-28", "Agreement Name": "US-Japan Critical Minerals Agreement", "Agency": "USTR", "Goal": "Trade & Supply Chain", "Key Points": "Waives tariffs on EV minerals; commits to non-market barrier sharing.", "Source": "https://ustr.gov" },
-                    { "Country": "Australia", "Date": "2023-05-20", "Agreement Name": "Climate, Critical Minerals, and Clean Energy Compact", "Agency": "State/DOE", "Goal": "Mining & Processing", "Key Points": "Establishes Ministerial dialogue; funding integration under DPA.", "Source": "https://whitehouse.gov" },
-                    { "Country": "United Kingdom", "Date": "2023-06-08", "Agreement Name": "Atlantic Declaration", "Agency": "White House", "Goal": "Supply Chain Security", "Key Points": "Launches negotiations on UK critical minerals agreement for IRA compliance.", "Source": "https://whitehouse.gov" }
-                ]
-            },
-            {
-                id: 'multilat',
-                name: 'Multilateral Deals',
-                csvUrl: '',
-                sampleData: [
-                    { "Forum / Group": "MSP (Minerals Security Partnership)", "Date": "2023-10-10", "Partners": "United States, Japan, South Korea, Australia, United Kingdom, Canada, Germany", "Focus Area": "Project Finance & Processing", "Key Deliverable": "MSP Forum launched to engage producer nations.", "Source": "https://state.gov" },
-                    { "Forum / Group": "G7 Alliance", "Date": "2023-04-16", "Partners": "United States, Japan, Germany, United Kingdom, Canada, France, Italy", "Focus Area": "ESG Standards & Recycling", "Key Deliverable": "5-Point Plan for Critical Minerals Security.", "Source": "https://g7.org" }
-                ]
-            },
-            {
-                id: 'financing',
-                name: 'Financing & DFC Grants',
-                csvUrl: '',
-                sampleData: [
-                    { "Recipient / Project": "TechMet / Lithium & Cobalt", "Country": "Brazil", "Amount": "$50 Million", "Funding Agency": "DFC", "Date": "2023-09-15", "Objective": "Upstream Extraction Expansion" },
-                    { "Recipient / Project": "Graphite Processing", "Country": "Mozambique", "Amount": "$150 Million", "Funding Agency": "DFC / EXIM", "Date": "2023-10-25", "Objective": "Anode Material Processing" },
-                    { "Recipient / Project": "Nickel Processing Facility", "Country": "Indonesia", "Amount": "$100 Million", "Funding Agency": "DFC", "Date": "2024-01-12", "Objective": "Midstream Refining" }
-                ]
-            }
-        ];
-
-        let tabsConfig = [];
-        let activeTabId = 'us_bilat';
-        let currentRawData = [];
-        let categoryChartInstance = null;
-        let partnerChartInstance = null;
-        let isEditingHero = false;
-
-        // Map Engine Variables
-        let mapInstance = null;
-        let markersGroup = null;
-
-        const COUNTRY_COORDS = {
-            "Japan": [36.2048, 138.2529],
-            "Australia": [-25.2744, 133.7751],
-            "United Kingdom": [55.3781, -3.4360],
-            "Brazil": [-14.2350, -51.9253],
-            "Mozambique": [-18.6657, 35.5296],
-            "Indonesia": [-0.7893, 113.9213],
-            "Canada": [56.1304, -106.3468],
-            "Germany": [51.1657, 10.4515],
-            "South Korea": [35.9078, 127.7669],
-            "United States": [37.0902, -95.7129]
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
-            loadHeroText();
-            loadConfiguration();
-            renderTabs();
-            renderConfigModalInputs();
-            initMap();
-            fetchCurrentTabData();
-
-            document.getElementById('darkModeToggle').addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-            });
-        });
-
-        // Editable Hero Functions
-        function loadHeroText() {
-            const savedTitle = localStorage.getItem('hero_title');
-            const savedBody = localStorage.getItem('hero_body');
-            
-            if (savedTitle) document.getElementById('heroTitle').innerText = savedTitle;
-            if (savedBody) document.getElementById('heroBody').innerHTML = savedBody;
-        }
-
-        function toggleHeroEdit() {
-            const title = document.getElementById('heroTitle');
-            const body = document.getElementById('heroBody');
-            const btnText = document.getElementById('editBtnText');
-            const resetBtn = document.getElementById('resetHeroBtn');
-
-            isEditingHero = !isEditingHero;
-
-            if (isEditingHero) {
-                title.contentEditable = "true";
-                body.contentEditable = "true";
-                btnText.innerText = "Save Text";
-                resetBtn.classList.remove('hidden');
-            } else {
-                title.contentEditable = "false";
-                body.contentEditable = "false";
-                btnText.innerText = "Edit Text";
-                resetBtn.classList.add('hidden');
-
-                localStorage.setItem('hero_title', title.innerText.trim());
-                localStorage.setItem('hero_body', body.innerHTML.trim());
-            }
-        }
-
-        function resetHeroText() {
-            document.getElementById('heroTitle').innerText = DEFAULT_HERO_TITLE;
-            document.getElementById('heroBody').innerHTML = DEFAULT_HERO_BODY;
-            localStorage.removeItem('hero_title');
-            localStorage.removeItem('hero_body');
-            if (isEditingHero) toggleHeroEdit();
-        }
-
-        // Configuration Modal Functions
-        function toggleConfigModal() {
-            const modal = document.getElementById('configModal');
-            modal.classList.toggle('hidden');
-        }
-
-        function renderConfigModalInputs() {
-            const container = document.getElementById('sheetInputs');
-            container.innerHTML = tabsConfig.map(tab => `
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">${tab.name} CSV URL</label>
-                    <input type="text" id="cfg_url_${tab.id}" value="${tab.csvUrl || ''}" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
-                           class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
-                </div>
-            `).join('');
-        }
-
-        function saveConfig() {
-            tabsConfig.forEach(tab => {
-                const val = document.getElementById(`cfg_url_${tab.id}`).value.trim();
-                tab.csvUrl = val;
-            });
-            localStorage.setItem('cm_tracker_config', JSON.stringify(tabsConfig));
-            toggleConfigModal();
-            renderTabs();
-            fetchCurrentTabData();
-        }
-
-        function resetDefaultConfig() {
-            tabsConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-            localStorage.removeItem('cm_tracker_config');
-            renderConfigModalInputs();
-            renderTabs();
-            fetchCurrentTabData();
-            toggleConfigModal();
-        }
-
-        function loadConfiguration() {
-            const saved = localStorage.getItem('cm_tracker_config');
-            if (saved) {
-                try { tabsConfig = JSON.parse(saved); } catch(e) { tabsConfig = DEFAULT_CONFIG; }
-            } else {
-                tabsConfig = DEFAULT_CONFIG;
-            }
-        }
-
-        function renderTabs() {
-            const container = document.getElementById('tabContainer');
-            container.innerHTML = tabsConfig.map(tab => `
-                <button onclick="switchTab('${tab.id}')" 
-                        class="py-3 px-1 whitespace-nowrap text-xs font-medium transition-colors flex items-center space-x-2 ${tab.id === activeTabId ? 'active-tab' : 'border-b-2 border-transparent hover:text-slate-900'}">
-                    <span>${tab.name}</span>
-                    ${tab.csvUrl ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Connected to Google Sheet"></span>' : ''}
-                </button>
-            `).join('');
-        }
-
-        function switchTab(tabId) {
-            activeTabId = tabId;
-            renderTabs();
-            document.getElementById('searchInput').value = '';
-            fetchCurrentTabData();
-        }
-
-        function fetchCurrentTabData() {
-            const tab = tabsConfig.find(t => t.id === activeTabId);
-            document.getElementById('activeTabName').innerText = `Tab: ${tab.name}`;
-            
-            if (tab.csvUrl && tab.csvUrl.trim() !== '') {
-                document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Fetching Sheet...</span>`;
-                Papa.parse(tab.csvUrl, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        currentRawData = results.data;
-                        document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Google Sheet Live</span>`;
-                        processAndDisplayData(currentRawData);
-                    },
-                    error: function(err) {
-                        document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Fallback Sample</span>`;
-                        currentRawData = tab.sampleData;
-                        processAndDisplayData(currentRawData);
-                    }
-                });
-            } else {
-                document.getElementById('statStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span>Sample Mode</span>`;
-                currentRawData = tab.sampleData;
-                processAndDisplayData(currentRawData);
-            }
-        }
-
-        function processAndDisplayData(data) {
-            populateFilterDropdowns(data);
-            applyFilters();
-        }
-
-        function populateFilterDropdowns(data) {
-            const countrySelect = document.getElementById('countryFilter');
-            const goalSelect = document.getElementById('goalFilter');
-
-            const countries = new Set();
-            const goals = new Set();
-
-            data.forEach(row => {
-                Object.keys(row).forEach(key => {
-                    const k = key.toLowerCase();
-                    if (k.includes('country') || k.includes('partner')) if (row[key]) countries.add(row[key]);
-                    if (k.includes('goal') || k.includes('agency') || k.includes('focus') || k.includes('objective')) if (row[key]) goals.add(row[key]);
-                });
-            });
-
-            countrySelect.innerHTML = '<option value="">All Countries / Partners</option>' + 
-                Array.from(countries).map(c => `<option value="${c}">${c}</option>`).join('');
-
-            goalSelect.innerHTML = '<option value="">All Objectives / Categories</option>' + 
-                Array.from(goals).map(g => `<option value="${g}">${g}</option>`).join('');
-        }
-
-        function applyFilters() {
-            const searchValue = document.getElementById('searchInput').value.toLowerCase();
-            const countryVal = document.getElementById('countryFilter').value;
-            const goalVal = document.getElementById('goalFilter').value;
-
-            const filtered = currentRawData.filter(row => {
-                const matchesSearch = Object.values(row).some(val => String(val).toLowerCase().includes(searchValue));
-                
-                let matchesCountry = true;
-                if (countryVal) {
-                    matchesCountry = Object.entries(row).some(([k, v]) => 
-                        (k.toLowerCase().includes('country') || k.toLowerCase().includes('partner')) && v === countryVal
-                    );
-                }
-
-                let matchesGoal = true;
-                if (goalVal) {
-                    matchesGoal = Object.entries(row).some(([k, v]) => 
-                        (k.toLowerCase().includes('goal') || k.toLowerCase().includes('agency') || k.toLowerCase().includes('focus') || k.toLowerCase().includes('objective')) && v === goalVal
-                    );
-                }
-
-                return matchesSearch && matchesCountry && matchesGoal;
-            });
-
-            renderTable(filtered);
-            updateStatsAndCharts(filtered);
-            updateMapMarkers(filtered);
-        }
-
-        function renderTable(data) {
-            const thead = document.getElementById('tableHeader');
-            const tbody = document.getElementById('tableBody');
-            document.getElementById('rowCount').innerText = `Showing ${data.length} entries`;
-
-            if (!data || data.length === 0) {
-                thead.innerHTML = '';
-                tbody.innerHTML = `<tr><td class="p-6 text-center text-slate-400">No matching records found.</td></tr>`;
-                return;
-            }
-
-            const headers = Object.keys(data[0]);
-            thead.innerHTML = `<tr>` + headers.map(h => `<th class="px-4 py-3">${h}</th>`).join('') + `</tr>`;
-
-            tbody.innerHTML = data.map(row => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    ${headers.map(h => {
-                        let cell = row[h] || '--';
-                        if (String(cell).startsWith('http')) {
-                            cell = `<a href="${cell}" target="_blank" class="text-blue-600 font-medium hover:underline inline-flex items-center space-x-1"><span>Link</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>`;
-                        }
-                        return `<td class="px-4 py-3">${cell}</td>`;
-                    }).join('')}
-                </tr>
-            `).join('');
-        }
-
-        function updateStatsAndCharts(data) {
-            document.getElementById('statTotalDeals').innerText = data.length;
-
-            const partnerSet = new Set();
-            const categoryCounts = {};
-            const partnerCounts = {};
-
-            data.forEach(row => {
-                Object.entries(row).forEach(([k, v]) => {
-                    const key = k.toLowerCase();
-                    if ((key.includes('country') || key.includes('partner')) && v) {
-                        const splitValues = String(v).split(/[,/]/);
-                        splitValues.forEach(p => {
-                            const trimmed = p.trim();
-                            if (trimmed) {
-                                partnerSet.add(trimmed);
-                                partnerCounts[trimmed] = (partnerCounts[trimmed] || 0) + 1;
-                            }
-                        });
-                    }
-                    if ((key.includes('goal') || key.includes('agency') || key.includes('focus') || key.includes('objective')) && v) {
-                        categoryCounts[v] = (categoryCounts[v] || 0) + 1;
-                    }
-                });
-            });
-
-            document.getElementById('statPartners').innerText = partnerSet.size;
-            document.getElementById('statGoals').innerText = Object.keys(categoryCounts).length;
-
-            // Render Category Chart
-            const catCtx = document.getElementById('categoryChart').getContext('2d');
-            if (categoryChartInstance) categoryChartInstance.destroy();
-            categoryChartInstance = new Chart(catCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(categoryCounts),
-                    datasets: [{
-                        data: Object.values(categoryCounts),
-                        backgroundColor: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            // Render Partner Chart
-            const partnerCtx = document.getElementById('partnerChart').getContext('2d');
-            if (partnerChartInstance) partnerChartInstance.destroy();
-            partnerChartInstance = new Chart(partnerCtx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(partnerCounts),
-                    datasets: [{
-                        label: 'Total Deals / Partnerships',
-                        data: Object.values(partnerCounts),
-                        backgroundColor: '#2563eb'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        function initMap() {
-            mapInstance = L.map('partnerMap').setView([20, 10], 2);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(mapInstance);
-
-            markersGroup = L.layerGroup().addTo(mapInstance);
-        }
-
-        function updateMapMarkers(data) {
-            if (!markersGroup) return;
-            markersGroup.clearLayers();
-
-            data.forEach(row => {
-                let countryName = '';
-                Object.entries(row).forEach(([k, v]) => {
-                    if ((k.toLowerCase().includes('country') || k.toLowerCase().includes('partner')) && v) {
-                        countryName = v;
-                    }
-                });
-
-                if (countryName) {
-                    const countries = countryName.split(/[,/]/);
-                    countries.forEach(c => {
-                        const trimmed = c.trim();
-                        if (COUNTRY_COORDS[trimmed]) {
-                            L.circleMarker(COUNTRY_COORDS[trimmed], {
-                                radius: 7,
-                                fillColor: '#2563eb',
-                                color: '#ffffff',
-                                weight: 2,
-                                opacity: 1,
-                                fillOpacity: 0.8
-                            }).bindPopup(`<strong>${trimmed}</strong><br/>Active Tracked Record`).addTo(markersGroup);
-                        }
-                    });
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Critical Minerals Deal Tracker</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1c1c1c;--mut:#6b6b6b;--line:#ddd8cc;--acc:#b3261e;--acc2:#e9a69f;--map:#d9d5c9;--sel:#1c1c1c;--blue:#2b5f8a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--card:#212125;--ink:#ececec;--mut:#9a9a9a;--line:#37373d;--acc:#ff6b5e;--acc2:#7a3b36;--map:#3a3a40;--sel:#fff;--blue:#7fb2dd}}
+:root[data-theme="dark"]{--bg:#17171a;--card:#212125;--ink:#ececec;--mut:#9a9a9a;--line:#37373d;--acc:#ff6b5e;--acc2:#7a3b36;--map:#3a3a40;--sel:#fff;--blue:#7fb2dd}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Georgia,'Times New Roman',serif}
+header{padding:22px 24px 8px;max-width:1300px;margin:auto}h1{margin:0;font-size:28px}header p{margin:4px 0 0;color:var(--mut);max-width:780px;font-family:system-ui,sans-serif;font-size:14px}
+main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;max-width:1300px;margin:auto;padding:12px 24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+#map{width:100%;height:480px;position:relative}
+.sans,.sans *{font-family:system-ui,sans-serif}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font:12px system-ui;color:var(--mut);margin-top:8px}.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+#panel h2{margin:0 0 2px;font-size:22px}#panel h3{font:600 12px system-ui;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:16px 0 5px;border-top:1px solid var(--line);padding-top:10px}
+#panel{font-family:system-ui,sans-serif;font-size:14px;max-height:620px;overflow:auto}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);margin:2px 3px 2px 0}.tag.a{background:var(--acc2)}.tag.b{cursor:pointer}
+.pend{color:var(--mut);font-style:italic}.big{font:700 26px Georgia,serif}
+a{color:var(--blue)}ul{margin:4px 0;padding-left:18px}details{margin:4px 0}summary{cursor:pointer}
+table{width:100%;border-collapse:collapse;font:13px system-ui}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:600}
+.wrap{overflow-x:auto}section.full{max-width:1300px;margin:0 auto;padding:6px 24px 18px}section.full h2{font-size:20px}
+footer{max-width:1300px;margin:auto;padding:10px 24px 40px;color:var(--mut);font:12px system-ui}
+button.x{float:right;border:1px solid var(--line);background:none;color:var(--ink);border-radius:6px;cursor:pointer;padding:2px 8px}
+@media(max-width:860px){main{grid-template-columns:1fr;padding:12px}#map{height:300px}header,section.full,footer{padding-left:12px;padding-right:12px}}
+.datamaps-hoverover{font:12px system-ui;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:4px 8px;border-radius:6px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 24px;border-bottom:1px solid var(--line);font:14px system-ui}.bar span{color:var(--mut);margin-left:10px;font-size:12px}.bar a{margin-right:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:1300px;margin:6px auto;padding:0 24px}.stats div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}.stats b{display:block;font:700 26px Georgia,serif}.stats small{color:var(--mut)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.row{display:grid;grid-template-columns:130px 1fr 30px;gap:8px;align-items:center;font:13px system-ui;margin:5px 0}.row i{display:block;height:10px;background:var(--acc);border-radius:3px}
+.fl{display:flex;gap:8px;margin-bottom:10px;font:13px system-ui;flex-wrap:wrap}.fl select{padding:5px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px}
+@media(max-width:860px){.stats{grid-template-columns:1fr 1fr;padding:0 12px}.two{grid-template-columns:1fr}.bar{padding:10px 12px}}
+.hb p{margin:.5em 0;max-width:860px;color:var(--mut);font:14px/1.6 system-ui}[contenteditable=true]{outline:2px dashed var(--blue);outline-offset:4px}
+#md{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:99;padding:12px}#md>div{background:var(--card);border-radius:10px;max-width:620px;width:100%;padding:18px;font:13px system-ui}#md input{width:100%;padding:6px;margin:3px 0 10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px}
+</style></head><body>
+<nav class="bar"><div><b>Critical Minerals Deal Tracker</b><span>Geopolitical Analysis &amp; Supply Chain Policy</span></div><div><a href="#" onclick="cfg(1);return false">⚙ Settings</a><a href="https://travis-brubaker.com/">Main Site</a><button class="x" id="tg" onclick="toggleTheme()">Dark mode</button></div></nav>
+<header><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="tag a sans">Project Overview</span><span><button class="x" id="eb" onclick="editHero()">Edit text</button><button class="x" id="rb" onclick="resetHero()" style="display:none;margin-left:6px">Reset</button></span></div>
+<h1 id="ht">Tracking Geopolitical Agreements &amp; Strategic Supply Chains</h1>
+<div id="hb" class="hb"><p>This platform tracks global bilateral partnerships, multilateral frameworks, and funding commitments securing critical mineral supply chains for clean energy and defense infrastructure. Such agreements have gained popularity in the last few years, especially in response to Chinese export restrictions and US tariffs.</p>
+<p>Since President Trump retook office in January 2025, Washington has pursued an aggressive “all of government” approach to critical minerals (CM), through executive and legislative efforts. This includes bilateral and plurilateral deals with key partners, laws and executive orders. No longer just a climate or supply chain question, Washington now treats CM policy as an essential security, economic and geopolitical driver.</p>
+<p>Click any country on the map to explore its funding, definitions, deals, partnerships and sources. Fields marked “not yet compiled” await verified sources and are never estimated. Connect your Google Sheet under Settings to sync the data.</p></div></header>
+<div class="stats sans" id="stats"></div>
+<main>
+<div class="card"><div id="map"></div>
+<div class="legend sans"><span><i style="background:var(--sel)"></i>Selected</span><span><i style="background:var(--acc)"></i>Bilateral deal partner</span><span><i style="background:var(--acc2)"></i>Shared plurilateral / framework</span><span><i style="background:var(--map)"></i>No tracked deal</span></div></div>
+<div class="card" id="panel"></div>
+</main>
+<section class="full"><h2>Plurilateral &amp; multilateral frameworks</h2><div class="card wrap"><table id="fw"></table></div></section>
+<section class="full"><h2>Engagement breakdown</h2><div class="two"><div class="card"><b class="sans">Objectives / agencies involved</b><div id="ag"></div></div><div class="card"><b class="sans">Top partner economies <small>(US-led frameworks joined)</small></b><div id="tp"></div></div></div></section>
+<section class="full"><h2>All tracked bilateral deals</h2><div class="card"><div class="fl"><select id="fp" onchange="rd()"><option value="">All countries / partners</option></select><select id="fa" onchange="rd()"><option value="">All agencies</option></select></div><div class="wrap"><table id="dl"></table></div></div></section>
+<div id="md"><div><b>Connect Google Sheet CSV links</b><p class="sans">In Google Sheets: File › Share › Publish to web › choose a tab › CSV. Paste each URL below. Tabs must keep the workbook’s column headers.</p>
+<label>US Bilateral Deals</label><input id="u_deals" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv">
+<label>US Funding</label><input id="u_fund" placeholder="https://docs.google.com/…"><label>Global Plurilateral Frameworks</label><input id="u_fw" placeholder="https://docs.google.com/…">
+<div style="text-align:right"><button class="x" style="float:none" onclick="cfg(0)">Cancel</button> <button class="x" style="float:none" onclick="saveCfg()">Save &amp; sync</button> <button class="x" style="float:none" onclick="resetCfg()">Reset defaults</button></div></div></div>
+<footer id="foot"></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datamaps/0.5.9/datamaps.world.min.js"></script>
+<script>
+const D={"iso": {"Angola": "AGO", "Argentina": "ARG", "Armenia": "ARM", "Australia": "AUS", "Bahrain": "BHR", "Belgium": "BEL", "Bolivia": "BOL", "Brazil": "BRA", "Canada": "CAN", "Cook Islands": "COK", "Czech Republic": "CZE", "Democratic Republic of the Congo": "COD", "Dominican Republic": "DOM", "Ecuador": "ECU", "Estonia": "EST", "Finland": "FIN", "France": "FRA", "Germany": "DEU", "Greece": "GRC", "Guinea": "GIN", "India": "IND", "Israel": "ISR", "Italy": "ITA", "Japan": "JPN", "Jordan": "JOR", "Kazakhstan": "KAZ", "Kenya": "KEN", "Lithuania": "LTU", "Malaysia": "MYS", "Mexico": "MEX", "Mongolia": "MNG", "Morocco": "MAR", "New Zealand": "NZL", "Norway": "NOR", "Oman": "OMN", "Pakistan": "PAK", "Paraguay": "PRY", "Peru": "PER", "Philippines": "PHL", "Poland": "POL", "Qatar": "QAT", "Republic of Korea": "KOR", "Romania": "ROU", "Saudi Arabia": "SAU", "Sierra Leone": "SLE", "Singapore": "SGP", "Sweden": "SWE", "Thailand": "THA", "Netherlands": "NLD", "Ukraine": "UKR", "United Arab Emirates": "ARE", "United Kingdom": "GBR", "Uzbekistan": "UZB", "Zambia": "ZMB", "United States": "USA", "Taiwan": "TWN", "Cambodia": "KHM", "China": "CHN", "Indonesia": "IDN", "Vietnam": "VNM"}, "defs": {"USGS (Interior) 2025 list": ["Aluminum", "Antimony", "Arsenic", "Barite", "Beryllium", "Bismuth", "Boron", "Cerium", "Cesium", "Chromium", "Cobalt", "Copper", "Dysprosium", "Erbium", "Europium", "Fluorspar", "Gadolinium", "Gallium", "Germanium", "Graphite", "Hafnium", "Holmium", "Indium", "Iridium", "Lanthanum", "Lead", "Lithium", "Lutetium", "Magnesium", "Manganese", "Metallurgical coal", "Neodymium", "Nickel", "Niobium", "Palladium", "Phosphate", "Platinum", "Potash", "Praseodymium", "Rhenium", "Rhodium", "Rubidium", "Ruthenium", "Samarium", "Scandium", "Silicon", "Silver", "Tantalum", "Tellurium", "Terbium", "Thulium", "Tin", "Titanium", "Tungsten", "Uranium", "Vanadium", "Ytterbium", "Yttrium", "Zinc", "Zirconium"], "DOE": ["Natural Graphite", "Metallurgical Coal", "Electrical Steel", "Silicon Carbide"], "DoW / DLA strategic materials": ["Aluminum-Lithium Alloy", "Beryllium Copper Master Alloy", "Cadmium Zinc Telluride", "Aluminum", "Antimony", "Beryllium", "Bismuth", "Cadmium", "Chromium", "Cobalt", "Copper", "Gallium", "Hafnium", "Indium", "Lead", "Lithium", "Magnesium", "Manganese", "Mercury", "Molybdenum", "Nickel", "Niobium", "Rhenium", "Strontium", "Tantalum", "Tin", "Titanium", "Tungsten", "Vanadium", "Zinc", "Zirconium", "Arsenic", "Boron", "Carbon Fibers", "Germanium", "Graphite", "Quartz", "Rubber (natural)", "Selenium", "Silicon Carbide", "Tellurium", "Cerium", "Dysprosium", "Erbium", "Europium", "Gadolinium", "Holmium", "Lanthanum", "Lutetium", "Neodymium", "Praseodymium", "Samarium", "Scandium", "Terbium", "Thulium", "Ytterbium", "Yttrium", "Aluminum Oxide Fused Crude", "Beryl Ore", "Ferrochromium", "Ferromanganese", "Fluorspar", "Iridium", "Palladium", "Platinum"]}, "members": {"AGO": ["Project Forge / Critical Minerals Framework"], "ARG": ["Project Forge / Critical Minerals Framework"], "ARM": ["Project Forge / Critical Minerals Framework"], "AUS": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "BHR": ["Project Forge / Critical Minerals Framework"], "BEL": ["Project Forge / Critical Minerals Framework"], "BOL": ["Project Forge / Critical Minerals Framework"], "BRA": ["Project Forge / Critical Minerals Framework"], "CAN": ["Project Forge / Critical Minerals Framework", "Minerals Security Partnership (replaced by Project Forge)"], "COK": ["Project Forge / Critical Minerals Framework"], "CZE": ["Project Forge / Critical Minerals Framework"], "COD": ["Project Forge / Critical Minerals Framework"], "DOM": ["Project Forge / Critical Minerals Framework"], "ECU": ["Project Forge / Critical Minerals Framework"], "EST": ["Project Forge / Critical Minerals Framework", "Minerals Security Partnership (replaced by Project Forge)"], "FIN": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "FRA": ["Project Forge / Critical Minerals Framework", "Minerals Security Partnership (replaced by Project Forge)"], "DEU": ["Project Forge / Critical Minerals Framework", "Minerals Security Partnership (replaced by Project Forge)"], "GRC": ["Project Forge / Critical Minerals Framework", "Pax Silica"], "GIN": ["Project Forge / Critical Minerals Framework"], "IND": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "ISR": ["Project Forge / Critical Minerals Framework", "Pax Silica"], "ITA": ["Project Forge / Critical Minerals Framework", "Minerals Security Partnership (replaced by Project Forge)"], "JPN": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "JOR": ["Project Forge / Critical Minerals Framework"], "KAZ": ["Project Forge / Critical Minerals Framework"], "KEN": ["Project Forge / Critical Minerals Framework"], "LTU": ["Project Forge / Critical Minerals Framework"], "MYS": ["Project Forge / Critical Minerals Framework"], "MEX": ["Project Forge / Critical Minerals Framework"], "MNG": ["Project Forge / Critical Minerals Framework"], "MAR": ["Project Forge / Critical Minerals Framework"], "NZL": ["Project Forge / Critical Minerals Framework"], "NOR": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "OMN": ["Project Forge / Critical Minerals Framework"], "PAK": ["Project Forge / Critical Minerals Framework"], "PRY": ["Project Forge / Critical Minerals Framework"], "PER": ["Project Forge / Critical Minerals Framework"], "PHL": ["Project Forge / Critical Minerals Framework"], "POL": ["Project Forge / Critical Minerals Framework"], "QAT": ["Project Forge / Critical Minerals Framework", "Pax Silica"], "KOR": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "ROU": ["Project Forge / Critical Minerals Framework"], "SAU": ["Project Forge / Critical Minerals Framework"], "SLE": ["Project Forge / Critical Minerals Framework"], "SGP": ["Project Forge / Critical Minerals Framework", "Pax Silica"], "SWE": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "THA": ["Project Forge / Critical Minerals Framework"], "NLD": ["Project Forge / Critical Minerals Framework"], "UKR": ["Project Forge / Critical Minerals Framework"], "ARE": ["Project Forge / Critical Minerals Framework", "Pax Silica"], "GBR": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "UZB": ["Project Forge / Critical Minerals Framework"], "ZMB": ["Project Forge / Critical Minerals Framework"], "USA": ["Project Forge / Critical Minerals Framework", "Pax Silica", "Minerals Security Partnership (replaced by Project Forge)"], "TWN": ["Pax Silica"]}};
+const N={USA:'United States',AUS:'Australia',KHM:'Cambodia',IND:'India',COD:'DR Congo',SAU:'Saudi Arabia',ARG:'Argentina',UZB:'Uzbekistan',KAZ:'Kazakhstan',CHN:'China',JPN:'Japan',MYS:'Malaysia',THA:'Thailand',KOR:'South Korea',IDN:'Indonesia',UKR:'Ukraine',VNM:'Vietnam',EU:'European Union',CAN:'Canada',NOR:'Norway'};
+let FUND=[
+{n:'One Big Beautiful Bill Act (H.R.1) – critical minerals provisions',amt:15000,scope:'Split not yet compiled',d:'2025 (enacted)',u:'https://www.congress.gov/bill/119th-congress/house-bill/1/text'},
+{n:'DOE Critical Minerals and Materials Accelerator',amt:69,scope:'Domestic (verify)',d:'7 Apr 2026',u:'https://www.energy.gov/cmei/ammto/critical-minerals-and-materials-accelerator-0'},
+{n:'USTDA pilot of US mineral-recovery technology in Indonesia',amt:null,scope:'Abroad',d:'—',u:'https://id.usembassy.gov/ustda-funds-pilot-of-u-s-critical-mineral-recovery-technology-in-indonesia/'}];
+let DEALS=[
+['UKR','30 Apr 2025','US-Ukraine Reconstruction Investment Fund','Treasury, DFC, State','Joint investment in Ukraine’s natural resources incl. rare earths, oil and gas, plus reconstruction.',null,['https://home.treasury.gov/news/press-releases/sb0126','https://urifinvest.com/']],
+['IDN','22 Jun 2025 (upd. 19 Feb 2026)','US-Indonesia trade deal','—','Indonesia to remove export restrictions to the US on industrial commodities incl. critical minerals. Freeport-McMoRan MOU. Focus: copper.',null,['https://www.whitehouse.gov/fact-sheets/2026/02/fact-sheet-trump-administration-finalizes-trade-deal-with-indonesia/']],
+['KOR','30 Jul 2025 (upd. 19 Apr 2026)','MOU on Strategic Investments','Treasury','Expand Korean investment in the US ($200bn).',200,['https://home.treasury.gov/news/press-releases/sb0459']],
+['AUS','20 Oct 2025 (upd. 3 Mar 2026)','US-Australia Framework for Securing Supply in Mining and Processing of Critical Minerals and Rare Earths','DOE, EPA, EXIM, Interior','Non-binding framework: coordinated investment and financing (at least $1bn), streamlined permitting, recycling, geological mapping. Focus: rare earths, gallium, nickel, graphite, magnesium, tungsten.',3.6,['https://www.whitehouse.gov/briefings-statements/2025/10/united-states-australia-framework-for-securing-of-supply-in-the-mining-and-processing-of-critical-minerals-and-rare-earths/']],
+['MYS','26 Oct 2025','US-Malaysia Agreement on Reciprocal Trade','USTR','Malaysia will not ban or set quotas on critical-mineral/rare-earth exports to the US; extended operating licences; no magnet restrictions.',null,['https://asean.usmission.gov/joint-statement-on-united-states-malaysia-agreement-on-reciprocal-trade/']],
+['THA','26 Oct 2025','MOU on diversifying global critical minerals supply chains','White House','Cooperation on supply-chain development, trade and investment, open and transparent markets.',null,['https://www.whitehouse.gov/briefings-statements/2025/10/memorandum-of-understanding-between-the-government-of-the-united-states-of-america-and-the-government-of-the-kingdom-of-thailand-concerning-cooperation-to-diversify-global-critical-minerals-supply-cha/']],
+['KHM','26 Oct 2025','Agreement on Reciprocal Trade','USTR, EXIM','Cambodia to facilitate US investment across exploration, mining, refining and export of critical minerals.',null,['https://ustr.gov/trade-agreements/agreements-reciprocal-trade']],
+['JPN','27 Oct 2025 (upd. 19 Mar 2026)','US-Japan Framework for Securing Supply of Critical Minerals and Rare Earths','—','Framework on mining and processing.',null,['https://www.whitehouse.gov/fact-sheets/2026/03/fact-sheet-president-donald-j-trump-strengthens-u-s-japan-alliance-for-the-benefit-of-all-americans/']],
+['CHN','1 Nov 2025','US-China truce (Section 301 modification)','USTR','China pauses export controls; US drops USTR investigation. Runs to 10 Nov 2026.',null,['https://www.federalregister.gov/documents/2025/11/13/2025-19873/notice-of-modification-of-section-301-action-chinas-targeting-of-the-maritime-logistics-and']],
+['UZB','6 Nov 2025','Elevating US-Uzbekistan Relations','—','Rights of first refusal on co-developed deposits; up to $400m investment; SMR purchases.',0.4,['https://www.state.gov/releases/office-of-the-spokesperson/2025/11/elevating-u-s-uzbekistan-relations']],
+['KAZ','6 Nov 2025','Tungsten mining and processing plant (Cove Capital)','Commerce','US firm Cove Capital and Kazakhstan agree to build a tungsten plant.',1.1,['https://kz.usembassy.gov/a-new-era-in-u-s-kazakhstan-relations/']],
+['ARG','13 Nov 2025','Framework for US-Argentina Agreement on Reciprocal Trade and Investment','—','Facilitate investment and trade in critical minerals.',null,['https://www.whitehouse.gov/briefings-statements/2025/11/joint-statement-on-framework-for-a-united-states-argentina-agreement-on-reciprocal-trade-and-investment/']],
+['SAU','18 Nov 2025','Strategic Framework on Uranium, Metals, Permanent Magnets and Critical Minerals','Treasury','Two-way investment tied to nuclear partnership; DoD, MP Materials and Ma’aden to build refining in Saudi Arabia.',null,['https://home.treasury.gov/news/press-releases/sb0318','https://www.maaden.com/news-insights/latest-news/maaden-furthers-commitment-with-mp-materials-to-establish-rare-earth-refinery-joint-venture-in-the-kingdom']],
+['COD','4 Dec 2025','Strategic Partnership Agreement with the DRC','State','Deepen cooperation on critical minerals, infrastructure and governance.',null,['https://www.state.gov/strategic-partnership-agreement-between-the-government-of-the-united-states-of-america-and-the-government-of-the-democratic-republic-of-the-congo']],
+['EU','24 Apr 2026','US-EU Action Plan for Critical Minerals Supply Chain Resilience','USTR','Coordinate trade policy, standards, investment and possible joint pricing/offtake mechanisms.',null,['https://ustr.gov/sites/default/files/files/Press/Releases/2026/U.S.-EU%20Critical%20Minerals%20Action%20Plan.pdf']],
+['IND','26 May 2026','US-India Framework on Securing Supply in Mining and Processing of Critical Minerals and Rare Earths','—','Cooperation on mining, processing, recycling, financing and scrap management.',null,['https://www.mea.gov.in/press-releases.htm?dtl/41236/IndiaUS_Framework_on_Securing_of_Supply_in_the_Mining_and_Processing_of_Critical_Minerals_and_Rare_Earths','https://in.usembassy.gov/united-states-and-india-sign-strategic-critical-minerals-cooperation-framework/']]];
+const NONUS=[['EU','VNM','EU-Vietnam Comprehensive Strategic Partnership joint statement',['https://data.consilium.europa.eu/doc/document/ST-5819-2026-INIT/en/pdf']]];
+let FW=[
+['Critical Minerals Ministerial','USA','Active','4 Feb 2026','https://www.state.gov/releases/office-of-the-spokesperson/2026/02/2026-critical-minerals-ministerial'],
+['Project Forge','USA','Active','4 Feb 2026 · 56 members',''],
+['Pax Silica','USA','Active','11 Dec 2025 · 16 members','https://www.state.gov/pax-silica'],
+['Minerals Security Partnership','USA','Replaced by Project Forge','15 Jun 2022','https://www.state.gov/minerals-security-partnership'],
+['Green Minerals Intl. Economic & Trade Cooperation Initiative','CHN','Active','11 Nov 2025 · 20 economies','https://www.mofcom.gov.cn/syxwfb/art/2025/art_28ee0c241a9a413c8946eac98855b5ce.html'],
+['G7 Critical Minerals Action Plan','CAN','—','8 members',''],['C5+1','USA','Ongoing','6 members',''],['Quad Critical Minerals Initiative','IND','—','4 members','']];
+const LEADS={USA:['Critical Minerals Ministerial','Project Forge','Pax Silica','Minerals Security Partnership (replaced)','C5+1'],CHN:['Green Minerals Int’l Economic & Trade Cooperation Initiative'],CAN:['G7 Critical Minerals Action Plan'],IND:['Quad Critical Minerals Initiative']};
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const REV=Object.fromEntries(Object.entries(D.iso).map(([k,v])=>[v,k]));const nm=c=>N[c]||REV[c]||c, fmt=n=>n>=1000?'$'+(n/1000)+'bn':'$'+n+'m';
+const link=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
+const host=u=>u.replace(/^https?:\/\/(www\.)?/,'').split('/')[0];
+const pend='<span class="pend">Not yet compiled</span>';
+const partners=c=>{const s=new Set();DEALS.forEach(d=>{if(c==='USA')s.add(d[0]);else if(d[0]===c)s.add('USA')});NONUS.forEach(n=>{if(n[0]===c)s.add(n[1]);if(n[1]===c)s.add(n[0])});return[...s]};
+let map,sel=null;
+function colours(){const o={};const m=css('--map');
+ Object.keys(D.members).forEach(k=>o[k]={fillColor:m});DEALS.forEach(d=>o[d[0]]={fillColor:m});
+ if(sel){const P=partners(sel);P.forEach(p=>o[p]={fillColor:css('--acc')});
+  if(D.members[sel])Object.keys(D.members).forEach(k=>{if(!P.includes(k)&&D.members[k].some(x=>D.members[sel].includes(x)))o[k]={fillColor:css('--acc2')}});
+  if(sel==='USA')Object.keys(D.members).forEach(k=>{if(!P.includes(k))o[k]={fillColor:css('--acc2')}});
+  o[sel]={fillColor:css('--sel')};}
+ else{Object.keys(o).forEach(k=>o[k]={fillColor:css('--acc2')});DEALS.forEach(d=>o[d[0]]={fillColor:css('--acc')})}
+ return o}
+function paint(){map.updateChoropleth(colours(),{reset:true})}
+function panel(c){
+ if(!c){P_.innerHTML=`<h2>Select a country</h2><p>Click any country on the map. Try <b>United States</b> for the fullest example: funding, USG definitions, ${DEALS.length} bilateral deals and US-led frameworks.</p><p class="pend">Coverage so far: ${DEALS.length} US bilateral deals, ${NONUS.length} non-US bilateral, ${FW.length} frameworks. More countries are being added.</p>`;return}
+ const src=new Map();const add=(u,t)=>src.set(u,t);
+ let h=`<button class="x" onclick="pick(null)">Clear</button><h2>${nm(c)}</h2>`;
+ h+='<h3>1 · Federal funding for critical minerals</h3>';
+ if(c==='USA'){const tot=FUND.reduce((a,f)=>a+(f.amt||0),0);
+  h+=`<div class="big">${fmt(tot)}+</div><div class="pend">Identified so far; domestic vs. abroad split pending (OBBBA, DoW/DPA, DFC, EXIM to be added).</div><ul>`;
+  FUND.forEach(f=>{h+=`<li><b>${f.amt?fmt(f.amt):'Amount n/a'}</b> – ${f.n}<br><small>${f.scope} · ${f.d}</small></li>`;add(f.u,f.n)});h+='</ul>'}
+ else h+=pend;
+ h+='<h3>2 · How it defines critical minerals</h3>';
+ if(c==='USA'){Object.entries(D.defs).forEach(([k,v])=>{h+=`<details><summary><b>${k}</b> (${v.length})</summary>${v.map(x=>`<span class="tag">${x}</span>`).join('')}</details>`});
+  add('https://www.usgs.gov/news/science-snippet/interior-department-releases-final-2025-list-critical-minerals','USGS 2025 critical minerals list');add('https://www.energy.gov/cmm/what-are-critical-minerals-and-materials','DOE: What are critical minerals and materials');add('https://www.dla.mil/Strategic-Materials/Materials/','DLA Strategic Materials')}
+ else h+=pend;
+ h+='<h3>3 · Bilateral critical-mineral deals</h3>';
+ const P=partners(c);
+ if(P.length){h+=P.map(p=>`<span class="tag a b" onclick="pick('${p}')">${nm(p)}</span>`).join('');h+='<ul>';
+  DEALS.filter(d=>c==='USA'||d[0]===c).forEach(d=>{h+=`<li><b>${nm(d[0])}</b> · ${d[1]}<br>${d[2]}<br><small>${d[4]}${d[5]?' · $'+d[5]+'bn':''}</small></li>`;d[6].forEach(u=>add(u,d[2]))});
+  NONUS.filter(n=>n[0]===c||n[1]===c).forEach(n=>{h+=`<li>${nm(n[0])} ↔ ${nm(n[1])}: ${n[2]}</li>`;n[3].forEach(u=>add(u,n[2]))});h+='</ul>'}
+ else h+=pend+' (no deals tracked)';
+ h+='<h3>4 · Multilateral &amp; plurilateral partnerships</h3>';
+ const L=LEADS[c]||[],M=D.members[c]||[];
+ h+=L.length?`<b>Leads:</b> ${L.map(x=>`<span class="tag a">${x}</span>`).join('')}<br>`:'';
+ h+=M.length?`<b>Member of:</b> ${M.map(x=>`<span class="tag">${x}</span>`).join('')}`:(L.length?'':'<span class="pend">None tracked</span>');
+ add('https://www.state.gov/pax-silica','State Dept: Pax Silica');add('https://www.state.gov/releases/office-of-the-spokesperson/2026/02/2026-critical-minerals-ministerial','State Dept: 2026 Critical Minerals Ministerial');
+ h+='<h3>5 · Leads in producing / refining</h3>'+pend;
+ h+='<h3>6 · Net importer or exporter</h3>'+(c==='USA'?'Net importer <small class="pend">(per project brief; to be verified against USGS Mineral Commodity Summaries)</small>':pend);
+ h+='<h3>7 · Sources</h3><ul>'+[...src].map(([u,t])=>`<li>${link(u,t.length>70?t.slice(0,68)+'…':t)} <small>(${host(u)})</small></li>`).join('')+'</ul>';
+ P_.innerHTML=h;P_.scrollTop=0}
+const P_=document.getElementById('panel');
+function pick(c){sel=c;paint();panel(c)}
+function init(){
+ map=new Datamap({element:document.getElementById('map'),projection:'mercator',responsive:true,
+  fills:{defaultFill:css('--map')},data:{},
+  geographyConfig:{borderColor:css('--bg'),borderWidth:.5,highlightFillColor:null,highlightOnHover:false,popupTemplate:g=>`<div class="datamaps-hoverover">${g.properties.name}</div>`},
+  done:ds=>ds.svg.selectAll('.datamaps-subunit').on('click',g=>pick(g.id===sel?null:g.id))});
+ paint();window.addEventListener('resize',()=>map.resize());}
+if(window.Datamap)init();else document.getElementById('map').innerHTML='<p class="pend">The map library could not load.</p>';
+panel(null);
+let AG=[];
+const bars=(el,rows)=>{const m=Math.max(1,...rows.map(r=>r[1]));document.getElementById(el).innerHTML=rows.map(r=>`<div class="row"><span>${r[0]}</span><i style="width:${r[1]/m*100}%"></i><b>${r[1]}</b></div>`).join('')};
+const FOC=['Rare earths','Gallium','Nickel','Graphite','Magnesium','Tungsten','Copper','Uranium','Permanent magnets'];
+let syncMsg='Built-in data · 28 May 2026';
+const sp=d=>d[3].split(/,\s*/);
+function rd(){const p=fp.value,a=fa.value,L=DEALS.filter(d=>(!p||d[0]===p)&&(!a||sp(d).includes(a)));
+document.getElementById('dl').innerHTML='<tr><th>Partner</th><th>Date</th><th>Deal</th><th>US agency</th><th>Summary</th><th>$bn</th><th>Sources</th></tr>'+(L.map(d=>`<tr><td>${nm(d[0])}</td><td>${d[1]}</td><td>${d[2]}</td><td>${d[3]}</td><td>${d[4]}</td><td>${d[5]??'—'}</td><td>${d[6].map(u=>link(u,host(u))).join('<br>')}</td></tr>`).join('')||'<tr><td colspan=7>No matching deals.</td></tr>')+`<caption style="caption-side:bottom;text-align:left;padding:6px;color:var(--mut)">Showing ${L.length} of ${DEALS.length} entries</caption>`}
+function renderAll(){AG=[...new Set(DEALS.flatMap(sp).filter(x=>x&&x!=='—'))].sort();
+bars('ag',AG.map(a=>[a,DEALS.filter(d=>sp(d).includes(a)).length]).sort((a,b)=>b[1]-a[1]));
+bars('tp',Object.entries(D.members).map(([k,v])=>[nm(k),v.length]).sort((a,b)=>b[1]-a[1]).slice(0,8));
+const UP=new Set(DEALS.map(d=>d[0]).concat(NONUS.flatMap(n=>[n[0],n[1]])));
+document.getElementById('stats').innerHTML=[[DEALS.length+NONUS.length,'Total tracked deals'],[UP.size,'Unique partners'],[FOC.length,'Strategic focus areas'],[syncMsg,'Data sync status']].map(s=>`<div><b${String(s[0]).length>6?' style="font-size:14px"':''}>${s[0]}</b><small>${s[1]}</small></div>`).join('');
+fp.innerHTML='<option value="">All countries / partners</option>'+[...new Set(DEALS.map(d=>d[0]))].map(c=>`<option value="${c}">${nm(c)}</option>`).join('');
+fa.innerHTML='<option value="">All agencies</option>'+AG.map(a=>`<option>${a}</option>`).join('');
+rd();
+document.getElementById('fw').innerHTML='<tr><th>Framework</th><th>Lead</th><th>Status</th><th>Announced / size</th><th>Source</th></tr>'+FW.map(f=>`<tr><td>${f[0]}</td><td>${nm(f[1])}</td><td>${f[2]}</td><td>${f[3]}</td><td>${f[4]?link(f[4],host(f[4])):'—'}</td></tr>`).join('');
+if(map){paint();panel(sel)}}
+renderAll();
+// ---- Google Sheet sync ----
+const U=()=>{try{return JSON.parse(localStorage.getItem('cm_urls')||'{}')}catch(e){return{}}};
+const AL={eu:'EU',drc:'COD','south korea':'KOR',usa:'USA',us:'USA',uk:'GBR',korea:'KOR'};
+const iso=s=>{s=(s||'').replace(/\*/g,'').trim().replace(/^the /i,'');return AL[s.toLowerCase()]||D.iso[s]||null};
+const ld=(url,fn)=>new Promise(res=>url?Papa.parse(url,{download:true,header:true,skipEmptyLines:true,transformHeader:h=>h.trim().toLowerCase(),complete:r=>{fn(r.data);res(1)},error:()=>res(0)}):res(null));
+const ok=v=>v&&v!=='--'&&!/^not given$/i.test(v);
+async function sync(){const u=U();let msg=[];
+ const a=await ld(u.deals,rows=>{const L=rows.map(r=>{const c=iso(r['politity']);if(!c)return null;const urls=[r['primary source'],r['secondary source']].filter(x=>/^http/.test(x||''));
+  return[c,(r['date announced']||'—')+(r['updates']?' (upd. '+r['updates']+')':''),r['deal name']||'—',r['us agency']||'—',ok(r['main points'])?r['main points']:(r['goal']||'—'),parseFloat(r['amount (bn usd)'])||null,urls]}).filter(Boolean);if(L.length)DEALS=L});
+ const b=await ld(u.fund,rows=>{const L=rows.filter(r=>r['name']||r['department']).map(r=>({n:r['name']||r['department'],amt:parseFloat(r['amount (up to, mn usd)'])||null,scope:r['scope']||'See source',d:r['announced']||'—',u:r['link']||''}));if(L.length)FUND=L});
+ const c=await ld(u.fw,rows=>{const L=rows.filter(r=>r['name']).map(r=>{const k=Object.keys(r).find(x=>x.startsWith('economies'));const l=(r['lead country']||'').replace(/\*/g,'');return[r['name'],iso(l)||l||'—',r['status']||'—',(r['date announced']||'—')+(r[k]?' · '+r[k]+' members':''),r['link']||'']});if(L.length)FW=L});
+ const used=[a,b,c].filter(x=>x!==null);const live=used.filter(x=>x===1).length;
+ syncMsg=!used.length?'Built-in data · 28 May 2026':live?`Google Sheet live · ${new Date().toLocaleDateString()}`:'Sheet unreachable · built-in data';
+ renderAll()}
+const cfg=o=>{const u=U();u_deals.value=u.deals||'';u_fund.value=u.fund||'';u_fw.value=u.fw||'';md.style.display=o?'flex':'none'};
+const saveCfg=()=>{try{localStorage.setItem('cm_urls',JSON.stringify({deals:u_deals.value.trim(),fund:u_fund.value.trim(),fw:u_fw.value.trim()}))}catch(e){}cfg(0);sync()};
+const resetCfg=()=>{try{localStorage.removeItem('cm_urls')}catch(e){}cfg(0);location.reload()};
+sync();
+// ---- editable hero ----
+const H0=[ht.innerHTML,hb.innerHTML];let ed=false;
+try{const s=localStorage.getItem('cm_hero');if(s){const o=JSON.parse(s);ht.innerHTML=o[0];hb.innerHTML=o[1]}}catch(e){}
+function editHero(){ed=!ed;ht.contentEditable=hb.contentEditable=ed;eb.textContent=ed?'Save text':'Edit text';rb.style.display=ed?'':'none';if(!ed)try{localStorage.setItem('cm_hero',JSON.stringify([ht.innerHTML,hb.innerHTML]))}catch(e){}}
+function resetHero(){ht.innerHTML=H0[0];hb.innerHTML=H0[1];try{localStorage.removeItem('cm_hero')}catch(e){}}
+function toggleTheme(){const r=document.documentElement,d=getComputedStyle(r).getPropertyValue('--bg').trim()==='#17171a';r.dataset.theme=d?'light':'dark';tg.textContent=d?'Dark mode':'Light mode';if(map)paint()}
+document.getElementById('foot').innerHTML='<p><b>Travis Brubaker</b> · International Energy &amp; Climate Policy Expert · <a href="mailto:brubaker.c.travis@gmail.com">Email</a> · <a href="https://twitter.com/Tra_brubaker">X</a> · <a href="https://linkedin.com/in/trabru">LinkedIn</a> · <a href="https://travis-brubaker.com/">Website</a></p><b>Sources &amp; acknowledgments.</b> Every record links to its primary source: White House, State, Treasury, USTR, DOE, USGS/Interior, DLA, Congress.gov, Federal Register, MOFCOM, EU Council and national governments. Defined-term lists are from USGS, DOE and DLA. Layout inspired by the CFR Global Conflict Tracker. Dollar figures are announced “up to” amounts, not disbursements.';
+</script></body></html>
