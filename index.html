@@ -161,8 +161,21 @@ rd();
 document.getElementById('fw').innerHTML='<tr><th>Framework</th><th>Lead</th><th>Status</th><th>Announced / size</th><th>Source</th></tr>'+FW.map(f=>`<tr><td>${f[0]}</td><td>${nm(f[1])}</td><td>${f[2]}</td><td>${f[3]}</td><td>${f[4]?link(f[4],host(f[4])):'—'}</td></tr>`).join('');
 if(map){paint();panel(sel)}}
 renderAll();
-// ---- Google Sheet sync ----
-const U=()=>{try{return JSON.parse(localStorage.getItem('cm_urls')||'{}')}catch(e){return{}}};
+ // ---- Google Sheet sync ----
+const DEFAULTS = {
+  deals: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=134949327&single=true&output=csv',
+  fund:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=189570346&single=true&output=csv',
+  fw:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=1901246238&single=true&output=csv'
+};
+
+const U = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cm_urls') || '{}');
+    return { ...DEFAULTS, ...saved };
+  } catch (e) {
+    return DEFAULTS;
+  }
+};
 const AL={eu:'EU',drc:'COD','south korea':'KOR',usa:'USA',us:'USA',uk:'GBR',korea:'KOR'};
 const iso=s=>{s=(s||'').replace(/\*/g,'').trim().replace(/^the /i,'');return AL[s.toLowerCase()]||D.iso[s]||null};
 const ld=(url,fn)=>new Promise(res=>url?Papa.parse(url,{download:true,header:true,skipEmptyLines:true,transformHeader:h=>h.trim().toLowerCase(),complete:r=>{fn(r.data);res(1)},error:()=>res(0)}):res(null));
