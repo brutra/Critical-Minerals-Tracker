@@ -29,11 +29,11 @@ button.x{float:right;border:1px solid var(--line);background:none;color:var(--in
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.row{display:grid;grid-template-columns:130px 1fr 30px;gap:8px;align-items:center;font:13px system-ui;margin:5px 0}.row i{display:block;height:10px;background:var(--acc);border-radius:3px}
 .fl{display:flex;gap:8px;margin-bottom:10px;font:13px system-ui;flex-wrap:wrap}.fl select{padding:5px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px}
 @media(max-width:860px){.stats{grid-template-columns:1fr 1fr;padding:0 12px}.two{grid-template-columns:1fr}.bar{padding:10px 12px}}
-.hb p{margin:.5em 0;max-width:860px;color:var(--mut);font:14px/1.6 system-ui}[contenteditable=true]{outline:2px dashed var(--blue);outline-offset:4px}
-#md{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:99;padding:12px}#md>div{background:var(--card);border-radius:10px;max-width:620px;width:100%;padding:18px;font:13px system-ui}#md input{width:100%;padding:6px;margin:3px 0 10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px}
+.hb p{margin:.5em 0;max-width:860px;color:var(--mut);font:14px/1.6 system-ui}
+#md{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:99;padding:12px}#md>div{background:var(--card);border-radius:10px;max-width:620px;max-height:90vh;overflow-y:auto;width:100%;padding:18px;font:13px system-ui}#md input{width:100%;padding:6px;margin:3px 0 10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px}
 </style></head><body>
 <nav class="bar"><div><b>Critical Minerals Deal Tracker</b><span>Geopolitical Analysis &amp; Supply Chain Policy</span></div><div><a href="#" onclick="cfg(1);return false">⚙ Settings</a><a href="https://travis-brubaker.com/">Main Site</a><button class="x" id="tg" onclick="toggleTheme()">Dark mode</button></div></nav>
-<header><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="tag a sans">Project Overview</span><span><button class="x" id="eb" onclick="editHero()">Edit text</button><button class="x" id="rb" onclick="resetHero()" style="display:none;margin-left:6px">Reset</button></span></div>
+<header><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="tag a sans">Project Overview</span></div>
 <h1 id="ht">Tracking Geopolitical Agreements &amp; Strategic Supply Chains</h1>
 <div id="hb" class="hb"><p>This platform tracks global bilateral partnerships, multilateral frameworks, and funding commitments securing critical mineral supply chains for clean energy and defense infrastructure. Such agreements have gained popularity in the last few years, especially in response to Chinese export restrictions and US tariffs.</p>
 <p>Since President Trump retook office in January 2025, Washington has pursued an aggressive “all of government” approach to critical minerals (CM), through executive and legislative efforts. This includes bilateral and plurilateral deals with key partners, laws and executive orders. No longer just a climate or supply chain question, Washington now treats CM policy as an essential security, economic and geopolitical driver.</p>
@@ -47,10 +47,15 @@ button.x{float:right;border:1px solid var(--line);background:none;color:var(--in
 <section class="full"><h2>Plurilateral &amp; multilateral frameworks</h2><div class="card wrap"><table id="fw"></table></div></section>
 <section class="full"><h2>Engagement breakdown</h2><div class="two"><div class="card"><b class="sans">Objectives / agencies involved</b><div id="ag"></div></div><div class="card"><b class="sans">Top partner economies <small>(US-led frameworks joined)</small></b><div id="tp"></div></div></div></section>
 <section class="full"><h2>All tracked bilateral deals</h2><div class="card"><div class="fl"><select id="fp" onchange="rd()"><option value="">All countries / partners</option></select><select id="fa" onchange="rd()"><option value="">All agencies</option></select></div><div class="wrap"><table id="dl"></table></div></div></section>
-<div id="md"><div><b>Connect Google Sheet CSV links</b><p class="sans">In Google Sheets: File › Share › Publish to web › choose a tab › CSV. Paste each URL below. Tabs must keep the workbook’s column headers.</p>
-<label>US Bilateral Deals</label><input id="u_deals" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv">
-<label>US Funding</label><input id="u_fund" placeholder="https://docs.google.com/…"><label>Global Plurilateral Frameworks</label><input id="u_fw" placeholder="https://docs.google.com/…">
-<div style="text-align:right"><button class="x" style="float:none" onclick="cfg(0)">Cancel</button> <button class="x" style="float:none" onclick="saveCfg()">Save &amp; sync</button> <button class="x" style="float:none" onclick="resetCfg()">Reset defaults</button></div></div></div>
+<div id="md"><div><b>Connect Google Sheet CSV links</b><p class="sans">In Google Sheets: File › Share › Publish to web › choose each tab › CSV. Paste each published CSV URL below.</p>
+<label>US Bilateral Deals</label><input id="u_deals" placeholder="https://docs.google.com/spreadsheets/d/e/…">
+<label>US Funding</label><input id="u_fund" placeholder="https://docs.google.com/…">
+<label>Global Plurilateral Frameworks</label><input id="u_fw" placeholder="https://docs.google.com/…">
+<label>Non-US Bilats</label><input id="u_nonus" placeholder="https://docs.google.com/…">
+<label>US Domestic</label><input id="u_dom" placeholder="https://docs.google.com/…">
+<label>USG Critical Mineral Defintions</label><input id="u_defs" placeholder="https://docs.google.com/…">
+<label>US Plurilateral Deal Countries</label><input id="u_members" placeholder="https://docs.google.com/…">
+<div style="text-align:right;margin-top:10px"><button class="x" style="float:none" onclick="cfg(0)">Cancel</button> <button class="x" style="float:none" onclick="saveCfg()">Save &amp; sync</button> <button class="x" style="float:none" onclick="resetCfg()">Reset defaults</button></div></div></div>
 <footer id="foot"></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
@@ -161,11 +166,15 @@ rd();
 document.getElementById('fw').innerHTML='<tr><th>Framework</th><th>Lead</th><th>Status</th><th>Announced / size</th><th>Source</th></tr>'+FW.map(f=>`<tr><td>${f[0]}</td><td>${nm(f[1])}</td><td>${f[2]}</td><td>${f[3]}</td><td>${f[4]?link(f[4],host(f[4])):'—'}</td></tr>`).join('');
 if(map){paint();panel(sel)}}
 renderAll();
- // ---- Google Sheet sync ----
+// ---- Google Sheet sync ----
 const DEFAULTS = {
   deals: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=134949327&single=true&output=csv',
   fund:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=189570346&single=true&output=csv',
-  fw:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=1901246238&single=true&output=csv'
+  fw:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=1901246238&single=true&output=csv',
+  nonus: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=1802989445&single=true&output=csv',
+  dom:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=1792650178&single=true&output=csv',
+  defs:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=1065017749&single=true&output=csv',
+  members: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQiwsNhK7JKUByLUsMiGHe_PMPPATIVWhG8So5BtuiphWMHX7CGtGHAI0tFzBKV-mBCEisgtsfS3Az/pub?gid=1093867402&single=true&output=csv'
 };
 
 const U = () => {
@@ -185,18 +194,31 @@ async function sync(){const u=U();let msg=[];
   return[c,(r['date announced']||'—')+(r['updates']?' (upd. '+r['updates']+')':''),r['deal name']||'—',r['us agency']||'—',ok(r['main points'])?r['main points']:(r['goal']||'—'),parseFloat(r['amount (bn usd)'])||null,urls]}).filter(Boolean);if(L.length)DEALS=L});
  const b=await ld(u.fund,rows=>{const L=rows.filter(r=>r['name']||r['department']).map(r=>({n:r['name']||r['department'],amt:parseFloat(r['amount (up to, mn usd)'])||null,scope:r['scope']||'See source',d:r['announced']||'—',u:r['link']||''}));if(L.length)FUND=L});
  const c=await ld(u.fw,rows=>{const L=rows.filter(r=>r['name']).map(r=>{const k=Object.keys(r).find(x=>x.startsWith('economies'));const l=(r['lead country']||'').replace(/\*/g,'');return[r['name'],iso(l)||l||'—',r['status']||'—',(r['date announced']||'—')+(r[k]?' · '+r[k]+' members':''),r['link']||'']});if(L.length)FW=L});
- const used=[a,b,c].filter(x=>x!==null);const live=used.filter(x=>x===1).length;
+ const d=await ld(u.nonus,rows=>{const L=rows.map(r=>{const p1=iso(r['partner 1']||r['country 1']||r['economy 1']);const p2=iso(r['partner 2']||r['country 2']||r['economy 2']);if(!p1||!p2)return null;const dealDesc=r['deal name']||r['description']||r['agreement']||'—';const urls=[r['source'],r['link'],r['primary source']].filter(x=>/^http/.test(x||''));return[p1,p2,dealDesc,urls]}).filter(Boolean);if(L.length)NONUS=L});
+ await ld(u.dom,rows=>{});
+ await ld(u.defs,rows=>{});
+ await ld(u.members,rows=>{});
+
+ const used=[a,b,c,d].filter(x=>x!==null);const live=used.filter(x=>x===1).length;
  syncMsg=!used.length?'Built-in data · 28 May 2026':live?`Google Sheet live · ${new Date().toLocaleDateString()}`:'Sheet unreachable · built-in data';
  renderAll()}
-const cfg=o=>{const u=U();u_deals.value=u.deals||'';u_fund.value=u.fund||'';u_fw.value=u.fw||'';md.style.display=o?'flex':'none'};
-const saveCfg=()=>{try{localStorage.setItem('cm_urls',JSON.stringify({deals:u_deals.value.trim(),fund:u_fund.value.trim(),fw:u_fw.value.trim()}))}catch(e){}cfg(0);sync()};
+const cfg=o=>{
+  const u=U();
+  u_deals.value=u.deals||''; u_fund.value=u.fund||''; u_fw.value=u.fw||''; u_nonus.value=u.nonus||'';
+  u_dom.value=u.dom||''; u_defs.value=u.defs||''; u_members.value=u.members||'';
+  md.style.display=o?'flex':'none';
+};
+const saveCfg=()=>{
+  try{
+    localStorage.setItem('cm_urls',JSON.stringify({
+      deals:u_deals.value.trim(), fund:u_fund.value.trim(), fw:u_fw.value.trim(), nonus:u_nonus.value.trim(),
+      dom:u_dom.value.trim(), defs:u_defs.value.trim(), members:u_members.value.trim()
+    }))
+  }catch(e){}
+  cfg(0); sync();
+};
 const resetCfg=()=>{try{localStorage.removeItem('cm_urls')}catch(e){}cfg(0);location.reload()};
 sync();
-// ---- editable hero ----
-const H0=[ht.innerHTML,hb.innerHTML];let ed=false;
-try{const s=localStorage.getItem('cm_hero');if(s){const o=JSON.parse(s);ht.innerHTML=o[0];hb.innerHTML=o[1]}}catch(e){}
-function editHero(){ed=!ed;ht.contentEditable=hb.contentEditable=ed;eb.textContent=ed?'Save text':'Edit text';rb.style.display=ed?'':'none';if(!ed)try{localStorage.setItem('cm_hero',JSON.stringify([ht.innerHTML,hb.innerHTML]))}catch(e){}}
-function resetHero(){ht.innerHTML=H0[0];hb.innerHTML=H0[1];try{localStorage.removeItem('cm_hero')}catch(e){}}
 function toggleTheme(){const r=document.documentElement,d=getComputedStyle(r).getPropertyValue('--bg').trim()==='#17171a';r.dataset.theme=d?'light':'dark';tg.textContent=d?'Dark mode':'Light mode';if(map)paint()}
 document.getElementById('foot').innerHTML='<p><b>Travis Brubaker</b> · International Energy &amp; Climate Policy Expert · <a href="mailto:brubaker.c.travis@gmail.com">Email</a> · <a href="https://twitter.com/Tra_brubaker">X</a> · <a href="https://linkedin.com/in/trabru">LinkedIn</a> · <a href="https://travis-brubaker.com/">Website</a></p><b>Sources &amp; acknowledgments.</b> Every record links to its primary source: White House, State, Treasury, USTR, DOE, USGS/Interior, DLA, Congress.gov, Federal Register, MOFCOM, EU Council and national governments. Defined-term lists are from USGS, DOE and DLA. Layout inspired by the CFR Global Conflict Tracker. Dollar figures are announced “up to” amounts, not disbursements.';
 </script></body></html>
